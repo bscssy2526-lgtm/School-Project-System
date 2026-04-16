@@ -73,8 +73,10 @@
     }
     .table-wrapper {
       overflow-x: auto;
+      overflow-y: auto;
       border: 1px solid #e5e7eb;
       border-radius: 6px;
+      max-height: 600px;
     }
     .preview-table {
       width: 100%;
@@ -190,6 +192,55 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    .confirm-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .confirm-modal[hidden] {
+      display: none;
+    }
+    .confirm-modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 500px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .confirm-modal-content h2 {
+      margin-top: 0;
+      color: #f59e0b;
+      margin-bottom: 1rem;
+    }
+    .confirm-message {
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      white-space: pre-wrap;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
   </style>
 </head>
 <body>
@@ -246,6 +297,19 @@
     </div>
   </div>
 
+  <!-- Confirmation Modal -->
+  <div id="confirm-modal" class="confirm-modal" hidden>
+    <div class="confirm-modal-content">
+      <h2>⚠️ Confirmation Required</h2>
+      <div id="confirm-message" class="confirm-message"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="cancelConfirm()">Cancel</button>
+        <button class="btn btn-primary" onclick="proceedWithSubmit()">Continue with Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
   <script type="module" src="batch-upload-preview.js"></script>
 </body>
 </html>

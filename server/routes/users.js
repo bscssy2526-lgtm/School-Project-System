@@ -975,8 +975,8 @@ router.post('/batch/preview', requireRole('Admin'), upload.single('file'), async
 
     // Paginate: 5 rows per page, or get all if requested
     const PAGE_SIZE = 5;
-    let page = parseInt(req.body.page || 1, 10);
-    const getAll = req.body.page === 'all';
+    let page = parseInt(req.query.page || 1, 10);
+    const getAll = req.query.page === 'all';
     
     if (!getAll) {
       if (isNaN(page) || page < 1) page = 1;
