@@ -131,9 +131,61 @@ export async function renderClasses(role = 'Admin') {
             <input type="text" id="enrollSearch" class="login-input" placeholder="Search by name, ID, year, or department..." style="margin-bottom:1rem;">
             <div id="enrollList" style="max-height:400px;overflow-y:auto;border:1px solid #ccc;border-radius:4px;"></div>
             <p id="enrollError" class="login-error" hidden></p>
-            <div style="margin-top:1rem;display:flex;gap:0.5rem;">
-              <button type="button" id="saveEnrollBtn" class="btn-primary">Save Enrollments</button>
-              <button type="button" id="cancelEnrollModal" class="btn-secondary">Cancel</button>
+            <div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:space-between;align-items:center;">
+              <button type="button" id="batchEnrollBtn" class="btn-secondary">📥 Batch Enroll</button>
+              <div style="display:flex;gap:0.5rem;">
+                <button type="button" id="saveEnrollBtn" class="btn-primary">Save Enrollments</button>
+                <button type="button" id="cancelEnrollModal" class="btn-secondary">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BATCH ENROLL MODAL -->
+      <div class="modal-overlay" id="batchEnrollModal" hidden>
+        <div class="modal" style="max-width: 700px;">
+          <div class="modal-header">
+            <h2 class="modal-title">Batch Enroll: <span id="batchEnrollClassName"></span></h2>
+            <button type="button" class="modal-close" id="closeBatchEnrollModal">×</button>
+          </div>
+          <div class="modal-body">
+            <label class="login-label">Upload Excel File with Student Names</label>
+            <input type="file" id="batchEnrollFile" class="login-input" accept=".xlsx,.xls" style="margin-bottom:1rem;">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">
+              Upload an Excel file with a column named "Name" containing student names. The system will find and enroll matching students.
+            </p>
+            <p id="batchEnrollError" class="login-error" hidden></p>
+            <p id="batchEnrollSuccess" class="login-error" style="background:#dcfce7;color:#166534;border-left-color:#16a34a;" hidden></p>
+            <div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:flex-end;">
+              <button type="button" id="previewBatchEnrollBtn" class="btn-primary">Preview</button>
+              <button type="button" id="cancelBatchEnrollModal" class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BATCH ENROLL PREVIEW MODAL -->
+      <div class="modal-overlay" id="batchEnrollPreviewModal" hidden>
+        <div class="modal" style="max-width: 900px;">
+          <div class="modal-header">
+            <h2 class="modal-title">Review Batch Enrollment</h2>
+            <button type="button" class="modal-close" id="closeBatchEnrollPreviewModal">×</button>
+          </div>
+          <div class="modal-body">
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+              <div style="padding:0.75rem 1rem;background:#dcfce7;color:#166534;border-radius:4px;border:1px solid #86efac;">
+                ✅ <strong id="batchEnrollMatchCount">0</strong> Students Found
+              </div>
+              <div style="padding:0.75rem 1rem;background:#fef3c7;color:#92400e;border-radius:4px;border:1px solid #fcd34d;">
+                ⚠️ <strong id="batchEnrollNoMatchCount">0</strong> Names Not Found
+              </div>
+            </div>
+            <div id="batchEnrollPreviewContent" style="max-height:400px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:4px;margin-bottom:1rem;"></div>
+            <p id="batchEnrollPreviewError" class="login-error" hidden></p>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+              <button type="button" id="backToBatchEnrollBtn" class="btn-secondary">Back</button>
+              <button type="button" id="confirmBatchEnrollBtn" class="btn-primary">Confirm Enrollment</button>
             </div>
           </div>
         </div>
@@ -462,6 +514,190 @@ export function initClassesPage() {
   closeEnrollBtn?.addEventListener('click', closeEnroll);
   cancelEnrollBtn?.addEventListener('click', closeEnroll);
   enrollModal?.addEventListener('click', e=>{ if(e.target===enrollModal) closeEnroll(); });
+
+  // Batch enroll modal
+  const batchEnrollModal = document.getElementById('batchEnrollModal');
+  const closeBatchEnrollBtn = document.getElementById('closeBatchEnrollModal');
+  const cancelBatchEnrollBtn = document.getElementById('cancelBatchEnrollModal');
+  const batchEnrollFile = document.getElementById('batchEnrollFile');
+  const previewBatchEnrollBtn = document.getElementById('previewBatchEnrollBtn');
+  const batchEnrollError = document.getElementById('batchEnrollError');
+  const batchEnrollSuccess = document.getElementById('batchEnrollSuccess');
+  const batchEnrollBtn = document.getElementById('batchEnrollBtn');
+  let currentBatchEnrollId = null;
+  let batchEnrollMatches = [];
+
+  const openBatchEnroll = (id, code) => {
+    currentBatchEnrollId = id;
+    document.getElementById('batchEnrollClassName').textContent = code;
+    batchEnrollFile.value = '';
+    batchEnrollError.hidden = true;
+    batchEnrollSuccess.hidden = true;
+    batchEnrollModal.hidden = false;
+  };
+  const closeBatchEnroll = () => { batchEnrollModal.hidden = true; };
+  const closeBatchEnrollPreview = () => { document.getElementById('batchEnrollPreviewModal').hidden = true; };
+
+  batchEnrollBtn?.addEventListener('click', () => {
+    const code = enrollClassName.textContent || '';
+    openBatchEnroll(currentEnrollId, code);
+  });
+  closeBatchEnrollBtn?.addEventListener('click', closeBatchEnroll);
+  cancelBatchEnrollBtn?.addEventListener('click', closeBatchEnroll);
+  batchEnrollModal?.addEventListener('click', e=>{ if(e.target===batchEnrollModal) closeBatchEnroll(); });
+
+  // Batch enroll preview modal
+  const batchEnrollPreviewModal = document.getElementById('batchEnrollPreviewModal');
+  const closeBatchEnrollPreviewBtn = document.getElementById('closeBatchEnrollPreviewModal');
+  const backToBatchEnrollBtn = document.getElementById('backToBatchEnrollBtn');
+  const confirmBatchEnrollBtn = document.getElementById('confirmBatchEnrollBtn');
+
+  closeBatchEnrollPreviewBtn?.addEventListener('click', closeBatchEnrollPreview);
+  backToBatchEnrollBtn?.addEventListener('click', closeBatchEnrollPreview);
+  batchEnrollPreviewModal?.addEventListener('click', e=>{ if(e.target===batchEnrollPreviewModal) closeBatchEnrollPreview(); });
+
+  previewBatchEnrollBtn?.addEventListener('click', async () => {
+    if (!batchEnrollFile.files.length) {
+      batchEnrollError.textContent = 'Please select a file';
+      batchEnrollError.hidden = false;
+      return;
+    }
+
+    try {
+      // Read and parse Excel file
+      const file = batchEnrollFile.files[0];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          if (!sheetName) {
+            batchEnrollError.textContent = 'Excel file is empty';
+            batchEnrollError.hidden = false;
+            return;
+          }
+
+          const sheet = workbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { range: 1 });
+
+          if (rows.length === 0) {
+            batchEnrollError.textContent = 'No data found in Excel file. Make sure there is a "Name" column.';
+            batchEnrollError.hidden = false;
+            return;
+          }
+
+          // Get student names from the file
+          const studentNamesToFind = rows
+            .map(row => {
+              // Try different column names
+              return (row['Name'] || row['name'] || row['Student Name'] || row['student_name'] || '').toString().trim();
+            })
+            .filter(name => name.length > 0);
+
+          if (studentNamesToFind.length === 0) {
+            batchEnrollError.textContent = 'No student names found. Make sure there is a column named "Name"';
+            batchEnrollError.hidden = false;
+            return;
+          }
+
+          // Match students by name against all available students
+          batchEnrollMatches = [];
+          const notFound = [];
+          
+          for (const nameToFind of studentNamesToFind) {
+            const found = enrollAllStudents.find(s => 
+              s.name.toLowerCase().includes(nameToFind.toLowerCase()) || 
+              nameToFind.toLowerCase().includes(s.name.toLowerCase())
+            );
+            if (found && !enrollInitiallyEnrolled.includes(found.user_id)) {
+              batchEnrollMatches.push(found);
+            } else if (!found) {
+              notFound.push(nameToFind);
+            }
+          }
+
+          // Show preview
+          renderBatchEnrollPreview(batchEnrollMatches, notFound);
+          batchEnrollModal.hidden = true;
+          batchEnrollPreviewModal.hidden = false;
+        } catch (err) {
+          console.error('Error processing file:', err);
+          batchEnrollError.textContent = 'Error reading file: ' + err.message;
+          batchEnrollError.hidden = false;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error('Error:', err);
+      batchEnrollError.textContent = 'Error: ' + err.message;
+      batchEnrollError.hidden = false;
+    }
+  });
+
+  const renderBatchEnrollPreview = (matches, notFound) => {
+    document.getElementById('batchEnrollMatchCount').textContent = matches.length;
+    document.getElementById('batchEnrollNoMatchCount').textContent = notFound.length;
+
+    const content = document.getElementById('batchEnrollPreviewContent');
+    content.innerHTML = `
+      <table class="data-table" style="margin:0; width:100%;">
+        <thead>
+          <tr><th>Name</th><th>ID</th><th>Year</th><th>Dept</th></tr>
+        </thead>
+        <tbody>
+          ${matches.map(s => `
+            <tr style="background:#f0fdf4;">
+              <td>${escapeHtml(s.name)}</td>
+              <td>${escapeHtml(s.student_id)}</td>
+              <td>${escapeHtml(s.year_level || '')}</td>
+              <td>${escapeHtml(s.department || '')}</td>
+            </tr>
+          `).join('')}
+          ${notFound.length > 0 ? `
+            <tr style="background:#fee2e2;">
+              <td colspan="4" style="color:#991b1b;padding:0.75rem;"><strong>⚠️ Not Found (${notFound.length}):</strong> ${notFound.map(n => escapeHtml(n)).join(', ')}</td>
+            </tr>
+          ` : ''}
+        </tbody>
+      </table>
+    `;
+  };
+
+  confirmBatchEnrollBtn?.addEventListener('click', async () => {
+    if (batchEnrollMatches.length === 0) {
+      alert('No students to enroll');
+      return;
+    }
+
+    try {
+      const studentIds = batchEnrollMatches.map(s => s.user_id);
+      const r = await api(`/classes/${currentBatchEnrollId}/enrollments`, {
+        method: 'POST',
+        body: { student_ids: studentIds }
+      });
+
+      if (r.ok) {
+        document.getElementById('batchEnrollPreviewError').hidden = true;
+        closeBatchEnrollPreview();
+        batchEnrollModal.hidden = true;
+        batchEnrollSuccess.textContent = `✅ ${batchEnrollMatches.length} student(s) enrolled successfully!`;
+        batchEnrollSuccess.hidden = false;
+        
+        // Reload student list
+        setTimeout(() => {
+          openEnroll(currentEnrollId, enrollClassName.textContent);
+        }, 1500);
+      } else {
+        document.getElementById('batchEnrollPreviewError').textContent = r.data?.error || 'Failed to enroll students';
+        document.getElementById('batchEnrollPreviewError').hidden = false;
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      document.getElementById('batchEnrollPreviewError').textContent = 'Error: ' + err.message;
+      document.getElementById('batchEnrollPreviewError').hidden = false;
+    }
+  });
 
   // delete modal listeners
   deleteCloseBtn?.addEventListener('click', () => { deleteClassModal.hidden = true; });
