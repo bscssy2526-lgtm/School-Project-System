@@ -1,0 +1,13 @@
+{
+  "name": "announcement_sms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Announcement Management and SMS Broadcasting System",
+  "scripts": {
+    "start": "cd server && npm start",
+    "init-db": "cd server && npm run init-db"
+  },
+  "dependencies": {
+    "multer": "^2.0.2"
+  }
+}

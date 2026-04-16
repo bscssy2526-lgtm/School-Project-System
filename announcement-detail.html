@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcement Details</title>
+  <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="styles/announcement-detail.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="app.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+</head>
+<body>
+  <div class="announcement-detail-container">
+    <!-- Header -->
+    <header class="detail-header">
+      <button onclick="history.back()" class="back-btn" title="Go back">← Back</button>
+      <h1>Announcement Details</h1>
+      <div style="width: 40px;"></div>
+    </header>
+
+    <!-- Main Content with Sidebar -->
+    <main class="detail-main-with-sidebar">
+      <!-- Left: Announcement Article -->
+      <article class="announcement-article">
+        <!-- Announcement Content -->
+        <div id="announcement-content" class="announcement-content">
+          <div class="loading">Loading announcement...</div>
+        </div>
+
+        <!-- Attachments Section -->
+        <div id="attachments-section" class="attachments-section" style="display: none;">
+          <h3>Attachments</h3>
+          <div id="attachments-list" class="attachments-list"></div>
+        </div>
+      </article>
+
+      <!-- Right: Comments Sidebar -->
+      <aside class="comments-sidebar">
+        <div class="comments-sticky-container">
+          <!-- Comments Section Header -->
+          <h3 class="comments-title">Comments</h3>
+
+          <!-- Comment Form -->
+          <div class="comment-form-container">
+            <form id="add-comment-form" class="comment-form">
+              <textarea 
+                id="comment-input" 
+                class="comment-textarea" 
+                placeholder="Share your thoughts..."
+                rows="3"
+                required
+              ></textarea>
+              <button type="submit" class="comment-submit-btn">Post</button>
+            </form>
+            <div id="comment-error" class="comment-error" style="display: none;"></div>
+            <div id="comment-loading" class="comment-loading" style="display: none;">Posting...</div>
+          </div>
+
+          <!-- Comments List -->
+          <div id="comments-list" class="comments-list">
+            <div class="comments-empty">No comments yet. Be the first!</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="announcement-detail.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('SW registered:', reg.scope);
+        }).catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

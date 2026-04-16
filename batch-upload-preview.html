@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Upload Review</title>
+  <link rel="stylesheet" href="styles/styles.css">
+  <script src="app.js"></script>
+  <style>
+    body {
+      background: #f3f4f6;
+      padding: 1rem;
+    }
+    .preview-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 1rem;
+    }
+    .preview-header h1 {
+      margin: 0;
+      font-size: 1.875rem;
+      color: #1f2937;
+    }
+    .preview-stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      padding: 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      min-width: 150px;
+    }
+    .stat-valid {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .stat-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+    .stat-error {
+      background: #fee2e2;
+      color: #9f1239;
+      border: 1px solid #fca5a5;
+    }
+    .warning-banner {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+      color: #92400e;
+    }
+    .warning-banner strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+    }
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .preview-table thead {
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+    }
+    .preview-table th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+    .preview-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .preview-table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+    .preview-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .preview-table tbody tr.status-error {
+      background: #fee2e2;
+    }
+    .preview-table tbody tr.status-warning {
+      background: #fefce8;
+    }
+    .preview-table tbody tr.status-valid {
+      background: #f0fdf4;
+    }
+    .status-icon {
+      font-weight: 600;
+      min-width: 30px;
+    }
+    .status-message {
+      max-width: 200px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      justify-content: flex-end;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 4px solid #dc2626;
+      margin-bottom: 1.5rem;
+    }
+    .success-message {
+      background: #dcfce7;
+      color: #166534;
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 4px solid #16a34a;
+      margin-bottom: 1.5rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+    .spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-container">
+    <div class="preview-header">
+      <h1>Batch Upload Review</h1>
+      <button class="btn btn-secondary" onclick="goBack()">← Back</button>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>Loading preview data...</p>
+    </div>
+
+    <div id="error-message" class="error-message" hidden></div>
+    <div id="success-message" class="success-message" hidden></div>
+
+    <div id="preview-content" style="display: none;">
+      <div class="preview-stats">
+        <div class="stat-box stat-valid">✅ Valid: <span id="stat-valid">0</span></div>
+        <div class="stat-box stat-warning">⚠️ Warnings: <span id="stat-warning">0</span></div>
+        <div class="stat-box stat-error">❌ Errors: <span id="stat-error">0</span></div>
+        <div class="stat-box" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;">📊 Total: <span id="stat-total">0</span></div>
+      </div>
+
+      <div id="warning-banner" class="warning-banner" hidden>
+        <strong>⚠️ Warning</strong>
+        <p>Entries with errors or warnings will NOT be registered. Only entries marked with ✅ will be imported.</p>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th style="width: 30px;">Status</th>
+              <th style="width: 200px;">Message</th>
+              <th>First Name</th>
+              <th>Middle Name</th>
+              <th>Last Name</th>
+              <th>Student ID</th>
+              <th>Birthday</th>
+              <th>Department</th>
+              <th>Year</th>
+            </tr>
+          </thead>
+          <tbody id="preview-body"></tbody>
+        </table>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="goBack()">Cancel</button>
+        <button id="submit-btn" class="btn btn-primary" onclick="submitUpload()">💾 Submit Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="batch-upload-preview.js"></script>
+</body>
+</html>

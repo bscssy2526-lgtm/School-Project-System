@@ -1,0 +1,849 @@
+/* ========================================
+   MODAL OVERLAYS & CONTAINERS
+   ======================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.notification {
+  z-index: 10001;
+}
+
+.modal-dialog {
+  background: #fff;
+  border-radius: 8px;
+  padding: 0;
+  max-width: 480px;
+  width: 95%;
+  max-height: 85vh;
+  overflow: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+  scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
+}
+
+.modal-dialog::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-dialog::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-dialog::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.modal-dialog::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+
+/* ========================================
+   ANNOUNCEMENT MODAL
+   ======================================== */
+
+.announcement-modal {
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.announcement-modal::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-dialog.notification {
+  max-width: 400px;
+  padding: 1.25rem;
+  overflow: visible;
+}
+
+.modal-dialog.compact {
+  max-width: 400px;
+}
+
+
+/* ========================================
+   MODAL HEADER
+   ======================================== */
+
+.modal-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1d21;
+  flex: 1;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #999;
+  padding: 0.25rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  color: #333;
+}
+
+
+/* ========================================
+   MODAL BODY
+   ======================================== */
+
+.modal-body {
+  padding: 1rem;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+
+.form-group {
+  margin-bottom: 0.85rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 0.4rem;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #333;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: 'Courier New', monospace;
+}
+
+.form-select {
+  cursor: pointer;
+}
+
+.form-checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  accent-color: #2563eb;
+}
+
+.form-checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+}
+
+
+/* ========================================
+   TARGETING SECTION
+   ======================================== */
+
+.targeting-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 5px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 0.85rem;
+}
+
+.targeting-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.class-context {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+  border-radius: 3px;
+}
+
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+.btn {
+  padding: 0.5rem 0.95rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #555;
+  border: 1px solid #d0d0d0;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  border-color: #999;
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-success {
+  background: #10b981;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  opacity: 0.5;
+  transform: none;
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+.btn-file {
+  padding: 0.5rem 0.95rem;
+}
+
+
+/* ========================================
+   NOTIFICATION POPUP
+   ======================================== */
+
+.notification-modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  max-width: 380px;
+  width: 95%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.notification-icon.success {
+  background: #10b981;
+}
+
+.notification-icon.error {
+  background: #ef4444;
+}
+
+.notification-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.notification-title.success {
+  color: #10b981;
+}
+
+.notification-title.error {
+  color: #ef4444;
+}
+
+.notification-content {
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.notification-button {
+  padding: 0.75rem 1rem;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s;
+}
+
+.notification-button.success {
+  background: #16a34a;
+}
+
+.notification-button.error {
+  background: #dc2626;
+}
+
+.notification-button:hover {
+  opacity: 0.9;
+}
+
+.notification-button:active {
+  opacity: 0.8;
+}
+
+
+/* ========================================
+   ATTACHMENT PREVIEW
+   ======================================== */
+
+.attachment-preview {
+  margin-bottom: 1.2rem;
+}
+
+.attachment-list {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.attachment-list-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.attachment-items {
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+  list-style: none;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.attachment-name {
+  flex: 1;
+  word-break: break-word;
+}
+
+.attachment-remove-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  padding: 0;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.attachment-remove-btn:hover {
+  background: #dc2626;
+}
+
+
+/* ========================================
+   COMPACT ANNOUNCEMENT BOX
+   ======================================== */
+
+.make-announcement-compact {
+  margin-bottom: 1.5rem;
+}
+
+.make-ann-compact-box {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.make-ann-compact-box:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.author-avatar-compact {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+
+.ann-input-trigger {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.2s;
+}
+
+.ann-input-trigger:hover {
+  color: #666;
+}
+
+.ann-input-trigger:focus {
+  outline: none;
+}
+
+
+/* ========================================
+   COMMENTS SECTION
+   ======================================== */
+
+.comments-section {
+  margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.comments-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1d21;
+  margin-bottom: 1rem;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.comment-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  border: 1px solid #ddd;
+}
+
+.comment-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1a1d21;
+}
+
+.comment-date {
+  font-size: 0.8rem;
+  color: #8b9199;
+  white-space: nowrap;
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.comment-delete-btn:hover {
+  color: #991b1b;
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  color: #333;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #333;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.comment-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.comment-submit-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.comment-submit-btn:hover {
+  background: #1d4ed8;
+}
+
+.comment-submit-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.comment-cancel-btn {
+  padding: 0.6rem 1.2rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: transparent;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.comment-cancel-btn:hover {
+  background: #f3f4f6;
+}
+
+.comments-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #8b9199;
+  font-size: 0.9rem;
+}
+
+
+/* ========================================
+   CLASS ANNOUNCEMENTS WITH SIDEBAR
+   ======================================== */
+
+.class-announcements-container {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 2rem;
+  width: 100%;
+}
+
+.class-announcements-container .main-content {
+  min-width: 0;
+}
+
+.class-students-sidebar {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+
+.students-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.students-list::-webkit-scrollbar {
+  display: none;
+}
+
+.student-item {
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 3px solid #2563eb;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.student-item:hover {
+  background: #f0f1f4;
+  transform: translateX(2px);
+}
+
+.student-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1d21;
+  word-break: break-word;
+}
+
+.student-meta {
+  font-size: 0.75rem;
+  color: #8b9199;
+  margin-top: 0.2rem;
+}
+
+/* Responsive: hide sidebar on smaller screens */
+@media (max-width: 1024px) {
+  .class-announcements-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .class-students-sidebar {
+    position: static;
+    top: auto;
+    max-height: none;
+  }
+  
+  .students-list {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .class-students-sidebar {
+    display: none;
+  }
+}
+
+/* ========================================
+   COMPACT FORM STYLES FOR MODALS
+   ======================================== */
+
+.modal-body .login-label {
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.modal-body .login-input,
+.modal-body select.login-input {
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.modal-body .login-form {
+  gap: 0.5rem;
+}
+
+.modal-body .login-field-wrap {
+  margin-bottom: 0.3rem;
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.modal-form-grid > *:last-child:nth-child(odd) {
+  grid-column: 1;
+}
+
+.modal-form-full {
+  grid-column: 1 / -1;
+}
+
+.profile-form-group {
+  margin-bottom: 0.5rem;
+}
