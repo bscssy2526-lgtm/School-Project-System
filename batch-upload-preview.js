@@ -57,6 +57,7 @@ async function loadFullPreview() {
     }
 
     previewData = result;
+    console.log('Preview response:', result); // Debug
     renderPreview(result);
     document.getElementById('loading').style.display = 'none';
     document.getElementById('preview-content').style.display = 'block';
@@ -67,24 +68,32 @@ async function loadFullPreview() {
 }
 
 function renderPreview(result) {
-  const { preview, summary } = result;
+  const { preview = [], summary = {} } = result;
+  
+  // Fallback values in case summary is missing
+  const stats = {
+    valid: summary.valid || 0,
+    warning: summary.warning || 0,
+    error: summary.error || 0
+  };
   
   // Update stats
-  document.getElementById('stat-valid').textContent = summary.valid;
-  document.getElementById('stat-warning').textContent = summary.warning;
-  document.getElementById('stat-error').textContent = summary.error;
+  document.getElementById('stat-valid').textContent = stats.valid;
+  document.getElementById('stat-warning').textContent = stats.warning;
+  document.getElementById('stat-error').textContent = stats.error;
   document.getElementById('stat-total').textContent = preview.length;
 
   // Show warning if needed
-  if (summary.warning > 0 || summary.error > 0) {
+  if (stats.warning > 0 || stats.error > 0) {
     document.getElementById('warning-banner').hidden = false;
   }
 
   // Update submit button state
   const submitBtn = document.getElementById('submit-btn');
-  submitBtn.disabled = !summary.canSubmit;
-  if (!summary.canSubmit) {
-    if (summary.error > 0) {
+  const canSubmit = stats.valid > 0 && stats.error === 0;
+  submitBtn.disabled = !canSubmit;
+  if (!canSubmit) {
+    if (stats.error > 0) {
       submitBtn.textContent = '❌ Fix errors to submit';
     } else {
       submitBtn.textContent = '⚠️  Warnings present (will skip)';
