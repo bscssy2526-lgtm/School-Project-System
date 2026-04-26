@@ -303,7 +303,7 @@ router.get('/pinned', async (req, res) => {
     let rows;
     if (req.user.role === 'Admin') {
       rows = await db.query(`
-        SELECT a.*, CONCAT(up.f_name, ' ', up.l_name) AS author_name, u.profile_path AS author_profile_path, c.class_name
+        SELECT a.*, CONCAT(up.f_name, ' ', up.l_name) AS author_name, up.profile_path AS author_profile_path, c.class_name
         FROM announcements a
         JOIN users u ON a.author_id = u.user_id
         LEFT JOIN user_profiles up ON u.user_id = up.user_id
@@ -313,7 +313,7 @@ router.get('/pinned', async (req, res) => {
       `);
     } else if (req.user.role === 'Instructor') {
       rows = await db.query(
-        `SELECT a.*, CONCAT(up.f_name, ' ', up.l_name) AS author_name, u.profile_path AS author_profile_path, c.class_name
+        `SELECT a.*, CONCAT(up.f_name, ' ', up.l_name) AS author_name, up.profile_path AS author_profile_path, c.class_name
          FROM announcements a
          JOIN users u ON a.author_id = u.user_id
          LEFT JOIN user_profiles up ON u.user_id = up.user_id
@@ -324,7 +324,7 @@ router.get('/pinned', async (req, res) => {
       );
     } else {
       rows = await db.query(
-        `SELECT DISTINCT a.*, CONCAT(up.f_name, ' ', up.l_name) AS author_name, u.profile_path AS author_profile_path, c.class_name
+        `SELECT DISTINCT a.*, CONCAT(up.f_name, ' ', up.l_name) AS author_name, up.profile_path AS author_profile_path, c.class_name
          FROM announcements a
          JOIN users u ON a.author_id = u.user_id
          LEFT JOIN user_profiles up ON u.user_id = up.user_id
@@ -1024,7 +1024,7 @@ router.post('/:id/comments', auth, async (req, res) => {
     if (!ann) return res.status(404).json({ error: 'Announcement not found' });
     await db.run('INSERT INTO comments (announcement_id, user_id, comment_text) VALUES (?, ?, ?)', [id, req.user.user_id, comment_text.trim()]);
     const row = await db.get(
-      `SELECT co.*, CONCAT(up.f_name, ' ', up.l_name) AS user_name, u.profile_path AS user_profile_path
+      `SELECT co.*, CONCAT(up.f_name, ' ', up.l_name) AS user_name, up.profile_path AS user_profile_path
        FROM comments co
        JOIN users u ON co.user_id = u.user_id
        LEFT JOIN user_profiles up ON u.user_id = up.user_id

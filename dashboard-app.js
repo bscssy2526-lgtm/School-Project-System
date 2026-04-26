@@ -159,6 +159,26 @@ function renderProfile(user) {
           <button type="submit" class="btn-primary" style="margin-top:1rem;">Update Password</button>
         </form>
       </div>
+
+      <!-- Database Backup Section (Admin Only) -->
+      ${user.role === 'Admin' ? `
+      <div class="profile-section" id="backupSection">
+        <h2 class="profile-section-title">Database Backup</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div>
+            <p style="margin: 0 0 1rem 0; font-size: 0.95rem; color: #475569;">Create a backup of your entire database to prevent data loss.</p>
+            <button type="button" id="createBackupBtn" class="btn-primary">Create Backup</button>
+            <p id="backupStatus" style="margin-top: 0.5rem; font-size: 0.85rem; color: #6b7280; display: none;"></p>
+          </div>
+          <div>
+            <p style="margin: 0 0 1rem 0; font-size: 0.95rem; color: #475569;">Available backups:</p>
+            <div id="backupsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1rem; background: #fafafa;">
+              <p style="margin: 0; color: #9ca3af; font-size: 0.85rem;">Loading backups...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
     </main>`;
 }
 
@@ -187,66 +207,122 @@ function renderMustRegisterEmail() {
     </main>`;
 }
 
-function renderPrivacyNotice() {
+function renderPrivacyNotice(role = 'Student') {
+  let content = '';
+
+  if (role === 'Instructor') {
+    content = `
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">1. Overview</h2>
+      <p>This Announcement Management and SMS Broadcasting System ("the System") is committed to protecting the privacy and security of our faculty members. This notice outlines how your personal information is processed in compliance with the Philippine Data Privacy Act of 2012.</p>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">2. Information We Collect</h2>
+      <p>Upon the creation of your account by the System Administrator, the following data is processed:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Professional Identity:</strong> Full Name and Employee/Faculty ID.</li>
+        <li><strong>Contact Information:</strong> Mobile Phone Number and Institutional/Personal Email Address.</li>
+        <li><strong>System Logs:</strong> Records of announcements sent, delivery timestamps, and login activity.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">3. Purpose of Processing</h2>
+      <p>Your data is used to enable the following functionalities:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Announcement Broadcasting:</strong> To allow you to send SMS and Email alerts to students.</li>
+        <li><strong>Account Management:</strong> To provide you with login credentials and system-related security updates.</li>
+        <li><strong>Audit Trails:</strong> To maintain a record of communications sent through the system for institutional accountability.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">4. Data Security &amp; Protection</h2>
+      <p>We employ robust technical measures to ensure your information remains confidential:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Advanced Encryption:</strong> Mobile numbers are protected using AES-256 encryption. Plain-text phone numbers are never stored in our database.</li>
+        <li><strong>Data Masking:</strong> For security, phone numbers are masked within the user interface (e.g., 09*****05) and are only decrypted momentarily by the backend for SMS transmission.</li>
+        <li><strong>Secure Transit:</strong> All email communications are transmitted via encrypted HTTPS protocols to our delivery partner, Ahasend.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">5. Third-Party Service Providers</h2>
+      <p>To facilitate broadcasting, the system interacts with:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Ahasend (Email API):</strong> Processes your email address solely to deliver notifications.</li>
+        <li><strong>SMS Gateway:</strong> Processes encrypted contact data to facilitate mobile broadcasts.</li>
+      </ul>
+      <p>These providers are bound by their own privacy standards and do not have permission to use your data for any other purpose.</p>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">6. Data Retention</h2>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Contact Information:</strong> Phone numbers are subject to an automated 4-year retention policy, after which they are purged from the system.</li>
+        <li><strong>Account Data:</strong> Email addresses and names are retained as long as your faculty account remains active.</li>
+        <li><strong>Archiving:</strong> Upon separation from the institution, your account may be soft-deleted or archived in accordance with school records management policies.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">7. Your Rights as a Data Subject</h2>
+      <p>You have the right to access your stored data, dispute any inaccuracies, and stay informed about any changes to how your data is handled. For inquiries regarding your privacy, please contact the Office of the Data Protection Officer.</p>
+    `;
+  } else {
+    // Student privacy notice
+    content = `
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">1. Introduction</h2>
+      <p>This system is committed to protecting the privacy of our students and faculty. In compliance with the Philippine Data Privacy Act of 2012 (RA 10173), this notice explains how we collect, use, and protect your personal information within our Announcement and SMS Broadcasting System.</p>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">2. Information We Collect</h2>
+      <p>We process the following personal information provided by the School Administrator:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Basic Identity:</strong> Full Name and Student/Faculty ID.</li>
+        <li><strong>Contact Details:</strong> Mobile Phone Number and Email Address.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">3. Purpose and Use of Data</h2>
+      <p>Your data is used strictly for academic communication, including:</p>
+      <ul style="margin-left:1.5rem;">
+        <li>Sending official school announcements via SMS and Email.</li>
+        <li>Distributing account credentials and system notifications.</li>
+        <li>Tracking delivery status of important broadcasts.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">4. How We Protect Your Data</h2>
+      <p>We implement high-level technical security to keep your information safe:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Encryption:</strong> Your phone numbers are encrypted using AES-256 standards. We do not store plain-text phone numbers in our database.</li>
+        <li><strong>Masking:</strong> For your protection, phone numbers are masked in the system interface (e.g., 09*****05).</li>
+        <li><strong>Transit Security:</strong> Emails are sent securely via HTTPS using the Ahasend API.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">5. Data Sharing &amp; Third Parties</h2>
+      <p>We do not sell or trade your data. To facilitate communications, your email and phone number are processed through:</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Ahasend (Email Service):</strong> Receives your email address only to deliver notifications.</li>
+        <li><strong>SMS Gateway:</strong> Receives your encrypted phone number for broadcast purposes.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">6. Data Retention &amp; Deletion</h2>
+      <p>We do not keep your data forever.</p>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Phone Numbers:</strong> Automatically deleted from our system four (4) years after being added.</li>
+        <li><strong>Email Addresses:</strong> Retained as long as your account is active for essential system communication.</li>
+        <li><strong>Logs:</strong> Transactional logs (like delivery timestamps) are kept to ensure the system is working correctly.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">7. Your Rights</h2>
+      <p>As a data subject, you have the right to:</p>
+      <ul style="margin-left:1.5rem;">
+        <li>Be informed that your data is being processed.</li>
+        <li>Access your data or request a summary of how it is used.</li>
+        <li>Object to the processing of your data (though this may limit your ability to receive school updates).</li>
+        <li>Request correction of any inaccurate information.</li>
+      </ul>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">8. Contact Us</h2>
+      <p>If you have concerns regarding your data privacy, please contact the System Administrator or the school's Data Protection Officer (DPO).</p>
+    `;
+  }
+
   return `
     <main class="main-content single-col" style="display:flex;align-items:center;justify-content:center;padding:1rem;">
       <div style="width:100%;max-width:700px;background:#ffffff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);padding:2rem;max-height:90vh;overflow-y:auto;">
         <h1 style="font-size:1.5rem;margin-bottom:0.5rem;color:#1a1d21;">DATA PRIVACY NOTICE</h1>
-        <p style="font-size:0.85rem;color:#6b7280;margin-bottom:2rem;">Last Updated: April 15, 2026</p>
+        <p style="font-size:0.85rem;color:#6b7280;margin-bottom:2rem;">Last Updated: April 17, 2026</p>
 
         <div style="font-size:0.95rem;line-height:1.6;color:#374151;">
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">1. Introduction</h2>
-          <p>This system is committed to protecting the privacy of our students and faculty. In compliance with the Philippine Data Privacy Act of 2012 (RA 10173), this notice explains how we collect, use, and protect your personal information within our Announcement and SMS Broadcasting System.</p>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">2. Information We Collect</h2>
-          <p>We process the following personal information provided by the School Administrator:</p>
-          <ul style="margin-left:1.5rem;">
-            <li><strong>Basic Identity:</strong> Full Name and Student/Faculty ID.</li>
-            <li><strong>Contact Details:</strong> Mobile Phone Number and Email Address.</li>
-          </ul>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">3. Purpose and Use of Data</h2>
-          <p>Your data is used strictly for academic communication, including:</p>
-          <ul style="margin-left:1.5rem;">
-            <li>Sending official school announcements via SMS and Email.</li>
-            <li>Distributing account credentials and system notifications.</li>
-            <li>Tracking delivery status of important broadcasts.</li>
-          </ul>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">4. How We Protect Your Data</h2>
-          <p>We implement high-level technical security to keep your information safe:</p>
-          <ul style="margin-left:1.5rem;">
-            <li><strong>Encryption:</strong> Your phone numbers are encrypted using AES-256 standards. We do not store plain-text phone numbers in our database.</li>
-            <li><strong>Masking:</strong> For your protection, phone numbers are masked in the system interface (e.g., 09*****05).</li>
-            <li><strong>Transit Security:</strong> Emails are sent securely via HTTPS using the Ahasend API.</li>
-          </ul>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">5. Data Sharing & Third Parties</h2>
-          <p>We do not sell or trade your data. To facilitate communications, your email and phone number are processed through:</p>
-          <ul style="margin-left:1.5rem;">
-            <li><strong>Ahasend (Email Service):</strong> Receives your email address only to deliver notifications.</li>
-            <li><strong>SMS Gateway:</strong> Receives your encrypted phone number for broadcast purposes.</li>
-          </ul>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">6. Data Retention & Deletion</h2>
-          <p>We do not keep your data forever.</p>
-          <ul style="margin-left:1.5rem;">
-            <li><strong>Phone Numbers:</strong> Automatically deleted from our system four (4) years after being added.</li>
-            <li><strong>Email Addresses:</strong> Retained as long as your account is active for essential system communication.</li>
-            <li><strong>Logs:</strong> Transactional logs (like delivery timestamps) are kept to ensure the system is working correctly.</li>
-          </ul>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">7. Your Rights</h2>
-          <p>As a data subject, you have the right to:</p>
-          <ul style="margin-left:1.5rem;">
-            <li>Be informed that your data is being processed.</li>
-            <li>Access your data or request a summary of how it is used.</li>
-            <li>Object to the processing of your data (though this may limit your ability to receive school updates).</li>
-            <li>Request correction of any inaccurate information.</li>
-          </ul>
-
-          <h2 style="font-size:1.1rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem;">8. Contact Us</h2>
-          <p>If you have concerns regarding your data privacy, please contact the System Administrator or the school's Data Protection Officer (DPO).</p>
+          ${content}
         </div>
 
         <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid #e5e7eb;">
@@ -299,54 +375,87 @@ async function render() {
     window.location.href = 'login.html';
     return;
   }
+  
+  console.log('🔄 Render called, fetching user data...');
   const res = await api('/users/me');
-  if (res.data) {
+  console.log('📦 API response:', res);
+  
+  if (res.ok && res.data) {
+    console.log('✓ User data from API:', res.data);
     currentUser = res.data;
     setUser(res.data);
   } else {
-    if (!res.data && (res.status === 401 || res.error === 'Unauthorized')) {
+    console.log('⚠️ API call failed or no data, falling back to local storage');
+    if (res.status === 401 || res.error === 'Unauthorized') {
       window.location.href = 'login.html';
       return;
     }
-    currentUser = currentUser || getUser();
+    currentUser = getUser();
+    console.log('✓ User from localStorage:', currentUser);
+    
     if (!currentUser || !currentUser.role) {
+      console.error('❌ No user data available');
       window.location.href = 'login.html';
       return;
     }
   }
 
+  if (!currentUser) {
+    console.error('❌ CRITICAL: currentUser is null/undefined after setup');
+    window.location.href = 'login.html';
+    return;
+  }
+
+  console.log('✓ currentUser is set:', currentUser);
+
   // Check privacy acceptance first (before password change)
   if (!currentUser.privacy_accepted) {
-    const html = renderPrivacyNotice();
+    console.log('⚠️ Privacy not accepted. Rendering privacy notice for role:', currentUser.role);
+    const html = renderPrivacyNotice(currentUser.role);
     document.getElementById('app').innerHTML = html;
     const checkbox = document.getElementById('privacyCheckbox');
     const acceptBtn = document.getElementById('acceptPrivacyBtn');
     const errEl = document.getElementById('privacyError');
 
-    acceptBtn?.addEventListener('click', async () => {
+    if (!acceptBtn) {
+      console.error('❌ Accept button not found in privacy notice');
+      return;
+    }
+
+    acceptBtn.addEventListener('click', async () => {
+      console.log('✓ Accept button clicked');
       errEl.hidden = true;
       
       if (!checkbox.checked) {
+        console.log('⚠️ Checkbox not checked');
         errEl.textContent = 'You must accept the Privacy Notice to continue.';
         errEl.hidden = false;
         return;
       }
 
+      console.log('✓ Checkbox is checked, sending accept request...');
       acceptBtn.disabled = true;
       acceptBtn.textContent = 'Accepting...';
 
       const res = await api('/users/privacy/accept', { method: 'POST' });
+      console.log('✓ Privacy accept response:', res);
       acceptBtn.disabled = false;
       acceptBtn.textContent = 'I Accept & Continue';
 
       if (!res.ok) {
+        console.error('❌ API error:', res);
         errEl.textContent = 'Failed to accept privacy notice. Please try again.';
         errEl.hidden = false;
         return;
       }
 
-      // Refresh user data and continue to next step
-      currentUser.privacy_accepted = true;
+      console.log('✓ Privacy accepted successfully, refetching user data...');
+      // Refetch user data from server to ensure privacy_accepted is updated
+      const userRes = await api('/users/me');
+      if (userRes.data) {
+        currentUser = userRes.data;
+        setUser(userRes.data);
+      }
       render();
     });
     return;
@@ -354,6 +463,7 @@ async function render() {
 
   // Then check password change
   if (currentUser.change_pass === true) {
+    console.log('⚠️ Password change required for user:', currentUser.user_id);
     const html = renderMustChangePassword();
     document.getElementById('app').innerHTML = html;
     const form = document.getElementById('mustChangePasswordForm');
@@ -362,6 +472,11 @@ async function render() {
     const confirmPwdInput = document.getElementById('mustChangeConfirm');
     const toggleNewBtn = document.getElementById('toggleMustChangeNew');
     const toggleConfirmBtn = document.getElementById('toggleMustChangeConfirm');
+
+    if (!form) {
+      console.error('❌ Password change form not found');
+      return;
+    }
 
     // Real-time password validation display
     newPwdInput?.addEventListener('input', function() {
@@ -388,12 +503,14 @@ async function render() {
 
     form?.addEventListener('submit', async function(e) {
       e.preventDefault();
+      console.log('✓ Password change form submitted');
       errEl.hidden = true;
       const newPassword = document.getElementById('mustChangeNew').value;
       const confirmPassword = document.getElementById('mustChangeConfirm').value;
       
       // Validate that passwords match
       if (newPassword !== confirmPassword) {
+        console.log('⚠️ Passwords do not match');
         errEl.textContent = 'Passwords do not match.';
         errEl.hidden = false;
         return;
@@ -402,32 +519,41 @@ async function render() {
       // Validate password strength
       const validation = validatePasswordStrength(newPassword);
       if (!validation.isValid) {
+        console.log('⚠️ Password validation failed:', validation.errors);
         errEl.textContent = validation.errors[0];
         errEl.hidden = false;
         return;
       }
       
+      console.log('✓ Sending password change request...');
       const r = await api('/users/me', { method: 'PATCH', body: { newPassword, forcePasswordChange: true } });
+      console.log('✓ Password change response:', r);
+      
       if (r.ok) {
+        console.log('✓ Password changed successfully, fetching fresh user data...');
         // Get fresh user data with all fields including has_email
         const freshUser = await api('/users/me');
+        console.log('✓ Fresh user data:', freshUser.data);
+        
         if (freshUser.ok && freshUser.data) {
           currentUser = freshUser.data;
           currentUser.change_pass = !!currentUser.change_pass;
           currentUser.has_email = !!currentUser.has_email;
           setUser(currentUser);
+          console.log('✓ Updated currentUser.change_pass to:', currentUser.change_pass);
           
-          // Check if student needs to register email
-          if (currentUser.role === 'Student' && !currentUser.has_email) {
-            render();
-          } else {
-            render();
-          }
+          // Force clear the app div before re-rendering
+          document.getElementById('app').innerHTML = '';
+          
+          console.log('✓ Re-rendering dashboard...');
+          render();
         } else {
+          console.error('❌ Failed to fetch fresh user data:', freshUser);
           errEl.textContent = 'Failed to load updated user data.';
           errEl.hidden = false;
         }
       } else {
+        console.error('❌ Password change failed:', r);
         errEl.textContent = r.data?.error || 'Failed to update password.';
         errEl.hidden = false;
       }
@@ -673,6 +799,167 @@ async function render() {
         if (notice) { notice.textContent = res.data?.error || 'Failed to update password.'; notice.hidden = false; }
       }
     });
+
+    // Backup handlers (Admin only)
+    const createBackupBtn = document.getElementById('createBackupBtn');
+    const backupStatus = document.getElementById('backupStatus');
+    const backupsList = document.getElementById('backupsList');
+
+    // Load backups on page load
+    if (currentUser.role === 'Admin') {
+      await loadBackupsList();
+    }
+
+    async function loadBackupsList() {
+      try {
+        const res = await api('/backup/list');
+        if (res.ok && res.data.backups) {
+          const backups = res.data.backups;
+          if (backups.length === 0) {
+            backupsList.innerHTML = '<p style="margin: 0; color: #9ca3af; font-size: 0.85rem;">No backups found</p>';
+          } else {
+            backupsList.innerHTML = backups.map(backup => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; font-size: 0.85rem;">
+                <div>
+                  <div style="font-weight: 500; color: #374151;">${backup.filename}</div>
+                  <div style="color: #9ca3af; font-size: 0.8rem;">${backup.createdFormatted} • ${backup.sizeFormatted}</div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button type="button" class="btn-sm btn-secondary restore-backup" data-filename="${backup.filename}" title="Restore">Restore</button>
+                  <button type="button" class="btn-sm btn-danger delete-backup" data-filename="${backup.filename}" title="Delete">Delete</button>
+                </div>
+              </div>
+            `).join('');
+
+            // Add event listeners for restore and delete buttons
+            document.querySelectorAll('.restore-backup').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const filename = e.target.dataset.filename;
+                
+                // Show password confirmation modal
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                  <div class="modal" style="max-width: 500px;">
+                    <div class="modal-header">
+                      <h2 class="modal-title">Confirm Database Restore</h2>
+                      <button type="button" class="modal-close" id="restoreModalClose">×</button>
+                    </div>
+                    <div class="modal-body">
+                      <div style="padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 1.5rem;">
+                        <p style="margin: 0; font-weight: 500; color: #92400e;">⚠️ Warning</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #b45309;">This will restore your database from <strong>${filename}</strong>. Your current database will be automatically backed up first.</p>
+                      </div>
+                      <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #475569;">Enter your password to confirm:</p>
+                      <input type="password" id="restorePasswordInput" class="login-input" placeholder="Enter your admin password" style="width: 100%; margin-bottom: 0.5rem;">
+                      <p id="restoreError" style="color: #ef4444; font-size: 0.85rem; margin: 0.5rem 0; display: none;"></p>
+                      <p id="restoreStatus" style="color: #6b7280; font-size: 0.85rem; margin: 0.5rem 0; display: none;"></p>
+                      <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                        <button type="button" id="restoreCancelBtn" class="btn-secondary" style="flex: 1;">Cancel</button>
+                        <button type="button" id="restoreConfirmBtn" class="btn-danger" style="flex: 1;">Restore Database</button>
+                      </div>
+                    </div>
+                  </div>`;
+                
+                document.body.appendChild(overlay);
+
+                const closeModal = () => overlay.remove();
+                document.getElementById('restoreModalClose').addEventListener('click', closeModal);
+                document.getElementById('restoreCancelBtn').addEventListener('click', closeModal);
+
+                const passwordInput = document.getElementById('restorePasswordInput');
+                const confirmBtn = document.getElementById('restoreConfirmBtn');
+                const errorEl = document.getElementById('restoreError');
+                const statusEl = document.getElementById('restoreStatus');
+
+                confirmBtn.addEventListener('click', async () => {
+                  const password = passwordInput.value;
+                  if (!password) {
+                    errorEl.textContent = 'Please enter your password';
+                    errorEl.style.display = 'block';
+                    return;
+                  }
+
+                  confirmBtn.disabled = true;
+                  confirmBtn.textContent = 'Restoring...';
+                  errorEl.style.display = 'none';
+                  statusEl.textContent = 'Creating safety backup...';
+                  statusEl.style.display = 'block';
+
+                  const res = await api('/backup/restore', { 
+                    method: 'POST', 
+                    body: { filename, password } 
+                  });
+
+                  if (res.ok) {
+                    statusEl.textContent = '✓ Database restored successfully! Safety backup: ' + res.data.autoBackup.filename;
+                    statusEl.style.color = '#10b981';
+                    setTimeout(() => {
+                      closeModal();
+                      alert('Database restored successfully!');
+                      loadBackupsList();
+                    }, 2000);
+                  } else {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = 'Restore Database';
+                    errorEl.textContent = res.data?.message || res.data?.error || 'Failed to restore backup';
+                    errorEl.style.display = 'block';
+                    statusEl.style.display = 'none';
+                  }
+                });
+
+                passwordInput.focus();
+              });
+            });
+
+            document.querySelectorAll('.delete-backup').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const filename = e.target.dataset.filename;
+                if (confirm(`Delete backup ${filename}?`)) {
+                  e.target.disabled = true;
+                  e.target.textContent = 'Deleting...';
+                  const res = await api(`/backup/${filename}`, { method: 'DELETE' });
+                  if (res.ok) {
+                    await loadBackupsList();
+                  } else {
+                    alert('Failed to delete backup: ' + (res.data?.error || 'Unknown error'));
+                  }
+                  e.target.disabled = false;
+                  e.target.textContent = 'Delete';
+                }
+              });
+            });
+          }
+        }
+      } catch (error) {
+        backupsList.innerHTML = '<p style="margin: 0; color: #ef4444; font-size: 0.85rem;">Failed to load backups</p>';
+      }
+    }
+
+    if (createBackupBtn) {
+      createBackupBtn.addEventListener('click', async () => {
+        createBackupBtn.disabled = true;
+        createBackupBtn.textContent = 'Creating backup...';
+        backupStatus.style.display = 'block';
+        backupStatus.textContent = 'Creating backup...';
+        backupStatus.style.color = '#6b7280';
+
+        const res = await api('/backup/create', { method: 'POST' });
+        
+        if (res.ok) {
+          backupStatus.textContent = `✓ Backup created: ${res.data.filename}`;
+          backupStatus.style.color = '#10b981';
+          createBackupBtn.textContent = 'Create Backup';
+          createBackupBtn.disabled = false;
+          await loadBackupsList();
+        } else {
+          backupStatus.textContent = `✗ Failed: ${res.data?.error || 'Unknown error'}`;
+          backupStatus.style.color = '#ef4444';
+          createBackupBtn.textContent = 'Create Backup';
+          createBackupBtn.disabled = false;
+        }
+      });
+    }
     // Phone edit handlers with OTP
     const editBtn = document.getElementById('editPhoneBtn');
     const sendOtpBtn = document.getElementById('sendPhoneOtpBtn');

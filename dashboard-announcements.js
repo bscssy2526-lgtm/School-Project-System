@@ -717,33 +717,33 @@ function attachAnnouncementHandlers() {
       targetingDiv.appendChild(yearGroup);
 
       body.appendChild(targetingDiv);
-
-      // SMS checkbox
-      const smsLabel = document.createElement('label');
-      smsLabel.className = 'form-checkbox-label';
-      const smsCheckbox = document.createElement('input');
-      smsCheckbox.type = 'checkbox';
-      smsCheckbox.id = 'sendSmsCheckbox';
-      smsCheckbox.className = 'form-checkbox';
-      const smsText = document.createElement('span');
-      smsText.textContent = 'Send SMS to matching students';
-      smsLabel.appendChild(smsCheckbox);
-      smsLabel.appendChild(smsText);
-      body.appendChild(smsLabel);
-
-      // Email checkbox
-      const emailLabel = document.createElement('label');
-      emailLabel.className = 'form-checkbox-label';
-      const emailCheckbox = document.createElement('input');
-      emailCheckbox.type = 'checkbox';
-      emailCheckbox.id = 'sendEmailCheckbox';
-      emailCheckbox.className = 'form-checkbox';
-      const emailText = document.createElement('span');
-      emailText.textContent = 'Send Email to students with verified email';
-      emailLabel.appendChild(emailCheckbox);
-      emailLabel.appendChild(emailText);
-      body.appendChild(emailLabel);
     }
+
+    // SMS and Email checkboxes (for both school-wide and class announcements)
+    const smsLabel = document.createElement('label');
+    smsLabel.className = 'form-checkbox-label';
+    const smsCheckbox = document.createElement('input');
+    smsCheckbox.type = 'checkbox';
+    smsCheckbox.id = 'sendSmsCheckbox';
+    smsCheckbox.className = 'form-checkbox';
+    const smsText = document.createElement('span');
+    smsText.textContent = classId ? 'Send SMS to enrolled students' : 'Send SMS to matching students';
+    smsLabel.appendChild(smsCheckbox);
+    smsLabel.appendChild(smsText);
+    body.appendChild(smsLabel);
+
+    // Email checkbox
+    const emailLabel = document.createElement('label');
+    emailLabel.className = 'form-checkbox-label';
+    const emailCheckbox = document.createElement('input');
+    emailCheckbox.type = 'checkbox';
+    emailCheckbox.id = 'sendEmailCheckbox';
+    emailCheckbox.className = 'form-checkbox';
+    const emailText = document.createElement('span');
+    emailText.textContent = classId ? 'Send Email to enrolled students with email' : 'Send Email to students with verified email';
+    emailLabel.appendChild(emailCheckbox);
+    emailLabel.appendChild(emailText);
+    body.appendChild(emailLabel);
 
     // Attachment preview
     const attachmentPreview = document.createElement('div');

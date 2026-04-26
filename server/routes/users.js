@@ -203,7 +203,7 @@ router.get('/', async (req, res) => {
       const countRow = await db.get(`SELECT COUNT(DISTINCT u.user_id) AS cnt FROM users u LEFT JOIN user_profiles up ON u.user_id = up.user_id ${where}`, params);
       const total = countRow ? countRow.cnt : 0;
       const offset = (page - 1) * limit;
-      const dataQuery = `SELECT u.user_id, up.f_name, up.l_name, u.username, u.role, up.student_id, GROUP_CONCAT(CASE WHEN c.contact_type='phone' THEN c.contact_value ELSE NULL END) as phone_num, up.department, up.year_level, up.profile_path, u.created_at
+      const dataQuery = `SELECT u.user_id, up.f_name, up.m_name, up.l_name, up.birthday, u.username, u.role, up.student_id, GROUP_CONCAT(CASE WHEN c.contact_type='phone' THEN c.contact_value ELSE NULL END) as phone_num, up.department, up.year_level, up.profile_path, u.created_at
                          FROM users u LEFT JOIN user_profiles up ON u.user_id = up.user_id LEFT JOIN contacts c ON u.user_id = c.user_id ${where} GROUP BY u.user_id ${order} LIMIT ? OFFSET ?`;
       const dataParams = params.concat([limit, offset]);
       const users = await db.query(dataQuery, dataParams);
@@ -218,7 +218,7 @@ router.get('/', async (req, res) => {
     }
 
     // otherwise return full list
-    const qry = `SELECT u.user_id, up.f_name, up.l_name, u.username, u.role, up.student_id, GROUP_CONCAT(CASE WHEN c.contact_type='phone' THEN c.contact_value ELSE NULL END) as phone_num, up.department, up.year_level, up.profile_path, u.created_at
+    const qry = `SELECT u.user_id, up.f_name, up.m_name, up.l_name, up.birthday, u.username, u.role, up.student_id, GROUP_CONCAT(CASE WHEN c.contact_type='phone' THEN c.contact_value ELSE NULL END) as phone_num, up.department, up.year_level, up.profile_path, u.created_at
                  FROM users u LEFT JOIN user_profiles up ON u.user_id = up.user_id LEFT JOIN contacts c ON u.user_id = c.user_id ${where} GROUP BY u.user_id ${order}`;
     const users = await db.query(qry, params);
     users.forEach(u => { 
@@ -431,14 +431,17 @@ router.post('/', requireRole('Admin'), async (req, res) => {
       if (role === 'Student') {
         if (!studentIdTrim) return res.status(400).json({ error: 'Student ID required.' });
         loginName = studentIdTrim;
+      } else if (role === 'Instructor') {
+        // Instructors use email as username
+        loginName = email;
       } else {
-        // Generate a username for instructors/admins based on their name
+        // Generate a username for admins based on their name
         loginName = await generateUniqueUsername(f_name, l_name);
         generated = true;
       }
     }
-    // For instructors/admins, keep usernames uppercase for consistency
-    const finalLoginName = (role === 'Student') ? loginName : (loginName || '').toString().toUpperCase();
+    // For students, keep lowercase; for instructors use email directly; for admins keep uppercase for consistency
+    const finalLoginName = (role === 'Student') ? loginName : (role === 'Instructor' ? (email || loginName) : (loginName || '').toString().toUpperCase());
     const existing = await db.get('SELECT user_id FROM users WHERE username = ? AND deleted_at IS NULL', [finalLoginName]);
     if (existing) {
       return res.status(400).json({ error: 'Username already in use.' });
@@ -467,7 +470,8 @@ router.post('/', requireRole('Admin'), async (req, res) => {
     }
     
     // For Instructor/Admin with email, generate random password
-    let finalPassword = password && password.trim() ? password : 'TempPass123!';
+    // For Students, password is their student ID
+    let finalPassword = password && password.trim() ? password : (role === 'Student' ? studentIdTrim : 'TempPass123!');
     let changePass = (!password || !password.trim()) ? 1 : 0;
     
     if ((role === 'Instructor' || role === 'Admin') && email) {
@@ -536,6 +540,14 @@ router.post('/', requireRole('Admin'), async (req, res) => {
       // Send email with the generated password
       const fullName = [capitalizeName(f_name), capitalizeName(m_name) || null, capitalizeName(l_name)].filter(Boolean).join(' ');
       const emailSubject = `Welcome to Diaz College Announcement System`;
+      let usernameNote = '';
+      
+      if (role === 'Instructor') {
+        usernameNote = '<p style="font-size: 0.9rem; color: #666; margin-top: 1rem;"><em>Note: Your username is your email address.</em></p>';
+      } else if (role === 'Admin') {
+        usernameNote = '<p style="font-size: 0.9rem; color: #666; margin-top: 1rem;"><em>Note: Your username is your email address.</em></p>';
+      }
+      
       const emailBody = `
         <!DOCTYPE html>
         <html>
@@ -548,6 +560,7 @@ router.post('/', requireRole('Admin'), async (req, res) => {
               <li><strong>Username:</strong> ${finalLoginName}</li>
               <li><strong>Password:</strong> <code style="background: #f0f0f0; padding: 2px 4px;">${finalPassword}</code></li>
             </ul>
+            ${usernameNote}
             <p>You will be required to change your password upon your first login for security purposes.</p>
             <p>If you did not expect this account, please contact your administrator.</p>
             <hr style="margin-top: 2rem; border: none; border-top: 1px solid #ddd;">
@@ -895,7 +908,8 @@ router.post('/batch/upload', requireRole('Admin'), upload.single('file'), async 
       }
 
       // Generate temporary password (can be changed on first login)
-      const tempPassword = 'TempPass123!';
+      // For students, password is their student ID
+      const tempPassword = student_id;
       const hashed = bcrypt.hashSync(tempPassword, 10);
 
       try {

@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const classesRoutes = require('./routes/classes');
 const announcementsRoutes = require('./routes/announcements');
+const backupRoutes = require('./routes/backup');
 const { auth } = require('./middleware/auth');
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/classes', classesRoutes);
 app.use('/api/announcements', auth, announcementsRoutes);
+app.use('/api/backup', backupRoutes);
 
 // Serve frontend (optional: static files from parent folder)
 const clientPath = path.join(__dirname, '..');

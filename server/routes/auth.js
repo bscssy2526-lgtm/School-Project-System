@@ -8,11 +8,31 @@ const { sendEmail } = require('../utils/email');
 
 const router = express.Router();
 
-function maskEmail(email) {
-  const [local, domain] = String(email || '').split('@');
-  if (!local || !domain) return '';
-  if (local.length <= 2) return `${local[0] || '*'}*@${domain}`;
-  return `${local.slice(0, 2)}${'*'.repeat(Math.max(1, local.length - 2))}@${domain}`;
+// Store OTP codes temporarily (in-memory, expires after 2 minutes)
+const forgotPasswordOtps = new Map();
+
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function storeOtp(username, otp) {
+  forgotPasswordOtps.set(username, {
+    otp,
+    timestamp: Date.now(),
+    expiresAt: Date.now() + 2 * 60 * 1000 // 2 minutes
+  });
+}
+
+function verifyOtp(username, otp) {
+  const stored = forgotPasswordOtps.get(username);
+  if (!stored || Date.now() > stored.expiresAt) {
+    return false;
+  }
+  return stored.otp === otp;
+}
+
+function clearOtp(username) {
+  forgotPasswordOtps.delete(username);
 }
 
 // Dev only: sign in as first Admin with no password (disabled in production)
@@ -129,154 +149,129 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Forgot password: send OTP to user's registered email
-router.post('/forgot-password/send-otp', async (req, res) => {
-  try {
-    const username = (req.body?.username || '').trim();
-    if (!username) {
-      return res.status(400).json({ error: 'Username is required.' });
-    }
+// Forgot Password: Send OTP
+router.post('/forgot-password', async (req, res) => {
+  const { username } = req.body;
 
+  if (!username) {
+    return res.status(400).json({ error: 'Username is required.' });
+  }
+
+  try {
     const user = await db.get(
-      `SELECT u.user_id, u.username, c.contact_value AS email
+      `SELECT u.user_id, up.f_name, up.l_name, u.username, u.role
        FROM users u
-       LEFT JOIN contacts c
-         ON c.user_id = u.user_id
-        AND c.contact_type = 'email'
-       WHERE TRIM(u.username) = ?
-         AND u.deleted_at IS NULL
+       LEFT JOIN user_profiles up ON u.user_id = up.user_id
+       WHERE TRIM(u.username) = ? AND u.deleted_at IS NULL
        LIMIT 1`,
-      [username]
+      [username.trim()]
     );
 
     if (!user) {
-      return res.status(404).json({ error: 'No account found for this username.' });
-    }
-    if (!user.email || !String(user.email).trim()) {
-      return res.status(400).json({ error: 'This account has no registered email.' });
-    }
-
-    const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-    const subject = 'Password Reset OTP - Diaz College Announcement System';
-    const body = `
-      <h2>Password Reset Request</h2>
-      <p>We received a password reset request for your account <strong>${user.username}</strong>.</p>
-      <p>Your OTP code is: <strong style="font-size: 1.5em; color: #3b82f6;">${otpCode}</strong></p>
-      <p style="color: #666;">This code is valid for 10 minutes. If you did not request this, you can ignore this email.</p>
-      <p style="margin-top: 2rem; font-size: 0.9em; color: #999;">Diaz College Announcement System</p>
-    `;
-    const emailResult = await sendEmail(user.email.trim(), subject, body);
-    if (!emailResult.success) {
-      return res.status(500).json({ error: 'Failed to send OTP. Please try again.' });
-    }
-
-    req.session.forgotPasswordOtp = {
-      user_id: user.user_id,
-      username: user.username,
-      email: user.email.trim(),
-      otp_code: otpCode,
-      expiresAt,
-      attempts: 0,
-      verified: false
-    };
-
-    return res.json({
-      message: 'OTP sent to your registered email.',
-      email: maskEmail(user.email.trim()),
-      expiresIn: 600
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Forgot password: verify OTP
-router.post('/forgot-password/verify-otp', async (req, res) => {
-  try {
-    const username = (req.body?.username || '').trim();
-    const otpCode = (req.body?.otp_code || '').trim();
-    if (!username) return res.status(400).json({ error: 'Username is required.' });
-    if (!otpCode) return res.status(400).json({ error: 'OTP code is required.' });
-
-    const pending = req.session.forgotPasswordOtp;
-    if (!pending) {
-      return res.status(400).json({ error: 'No pending OTP. Request a new one.' });
-    }
-    if (pending.username !== username) {
-      return res.status(400).json({ error: 'Username does not match OTP request.' });
-    }
-    if (Date.now() > pending.expiresAt) {
-      delete req.session.forgotPasswordOtp;
-      return res.status(400).json({ error: 'OTP has expired. Request a new one.' });
-    }
-    if (pending.attempts >= 3) {
-      delete req.session.forgotPasswordOtp;
-      return res.status(400).json({ error: 'Too many failed attempts. Request a new OTP.' });
-    }
-    if (pending.otp_code !== otpCode) {
-      pending.attempts += 1;
-      const remaining = Math.max(0, 3 - pending.attempts);
-      return res.status(400).json({ error: `Invalid OTP code. ${remaining} attempts remaining.` });
-    }
-
-    pending.verified = true;
-    return res.json({ message: 'OTP verified. You can now set a new password.' });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Forgot password: reset password after OTP verification
-router.post('/forgot-password/reset', async (req, res) => {
-  try {
-    const username = (req.body?.username || '').trim();
-    const newPassword = req.body?.new_password || '';
-
-    if (!username) return res.status(400).json({ error: 'Username is required.' });
-    if (!newPassword) return res.status(400).json({ error: 'New password is required.' });
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
-    }
-    if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
-      return res.status(400).json({ error: 'Password must include at least one letter and one number.' });
-    }
-
-    const pending = req.session.forgotPasswordOtp;
-    if (!pending || !pending.verified) {
-      return res.status(400).json({ error: 'Verify OTP first before resetting password.' });
-    }
-    if (pending.username !== username) {
-      return res.status(400).json({ error: 'Username does not match OTP request.' });
-    }
-    if (Date.now() > pending.expiresAt) {
-      delete req.session.forgotPasswordOtp;
-      return res.status(400).json({ error: 'OTP session expired. Request a new OTP.' });
-    }
-
-    const user = await db.get(
-      `SELECT user_id FROM users WHERE TRIM(username) = ? AND deleted_at IS NULL LIMIT 1`,
-      [username]
-    );
-    if (!user) {
-      delete req.session.forgotPasswordOtp;
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    const hash = bcrypt.hashSync(newPassword, 10);
-    await db.run(
-      `UPDATE users SET password = ?, change_pass = 0 WHERE user_id = ?`,
-      [hash, user.user_id]
+    // Get user's email from contacts table
+    const emailContact = await db.get(
+      `SELECT contact_value FROM contacts WHERE user_id = ? AND contact_type = 'email' LIMIT 1`,
+      [user.user_id]
     );
 
-    delete req.session.forgotPasswordOtp;
-    return res.json({ message: 'Password reset successful. You may now log in.' });
+    if (!emailContact || !emailContact.contact_value) {
+      return res.status(400).json({ error: 'No email registered for this account.' });
+    }
+
+    // Generate and store OTP
+    const otp = generateOtp();
+    storeOtp(username.trim(), otp);
+
+    // Send OTP via email
+    const fullName = [user.f_name, user.l_name].filter(Boolean).join(' ') || user.username;
+    const emailSubject = 'Password Reset Code - Diaz College Announcement System';
+    const emailBody = `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+          <h2>Password Reset Request</h2>
+          <p>Hi ${fullName},</p>
+          <p>We received a request to reset your password. Use the following code to proceed:</p>
+          <p style="font-size: 1.5rem; font-weight: bold; letter-spacing: 5px; margin: 1.5rem 0;">
+            <code style="background: #f0f0f0; padding: 10px 15px; border-radius: 5px;">${otp}</code>
+          </p>
+          <p style="color: #666; font-size: 0.875rem;">This code is valid for 2 minutes.</p>
+          <p>If you did not request this, please ignore this email.</p>
+          <hr style="margin-top: 2rem; border: none; border-top: 1px solid #ddd;">
+          <p style="font-size: 0.875rem; color: #666;">Diaz College Integrated Announcement Management System</p>
+        </body>
+      </html>
+    `;
+
+    try {
+      await sendEmail(emailContact.contact_value, emailSubject, emailBody);
+      console.log(`✓ OTP sent to ${emailContact.contact_value} for user ${user.user_id}`);
+      res.json({ message: 'Verification code sent to your registered email.' });
+    } catch (emailErr) {
+      console.error('Failed to send OTP email:', emailErr);
+      clearOtp(username.trim());
+      res.status(500).json({ error: 'Failed to send code. Please try again.' });
+    }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Forgot Password: Verify OTP and Reset Password
+router.post('/verify-forgot-password', async (req, res) => {
+  const { username, otp, newPassword } = req.body;
+
+  if (!username || !otp || !newPassword) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+
+  try {
+    const usernameTrim = username.trim();
+
+    // Verify OTP
+    if (!verifyOtp(usernameTrim, otp.trim())) {
+      return res.status(400).json({ error: 'Invalid or expired code.' });
+    }
+
+    // Find user
+    const user = await db.get(
+      `SELECT u.user_id, u.username FROM users u WHERE TRIM(u.username) = ? AND u.deleted_at IS NULL`,
+      [usernameTrim]
+    );
+
+    if (!user) {
+      clearOtp(usernameTrim);
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Validate password strength
+    const passwordRegex = /^(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(?=.{8,})/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        error: 'Password must be at least 8 characters with lowercase letter, number, and special character.'
+      });
+    }
+
+    // Update password
+    const hashed = bcrypt.hashSync(newPassword, 10);
+    await db.run(
+      'UPDATE users SET password = ?, change_pass = 0 WHERE user_id = ?',
+      [hashed, user.user_id]
+    );
+
+    // Clear OTP
+    clearOtp(usernameTrim);
+
+    console.log(`✓ Password reset for user ${user.user_id}`);
+    res.json({ message: 'Password reset successfully.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

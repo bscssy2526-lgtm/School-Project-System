@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   role ENUM('Student', 'Instructor', 'Admin') NOT NULL,
   change_pass TINYINT(1) NOT NULL DEFAULT 1,
+  privacy_accepted DATETIME DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_at DATETIME DEFAULT NULL,
   PRIMARY KEY (user_id),

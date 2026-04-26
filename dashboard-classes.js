@@ -33,7 +33,7 @@ export async function renderClasses(role = 'Admin') {
               <td>${escapeHtml(c.section || '—')}</td>
               ${!isInstructor ? `<td>${escapeHtml(c.instructor_name || '—')}</td>` : ''}
               <td>${(c.student_count != null) ? c.student_count + ' Students' : '—'}</td>
-              <td><button type="button" class="icon-btn view-class" data-id="${c.class_id}" title="View students">👁️</button><button type="button" class="icon-btn enroll-class" data-id="${c.class_id}" title="Enroll students">➕</button><button type="button" class="icon-btn edit-class" data-id="${c.class_id}" title="Edit">✏️</button><button type="button" class="icon-btn delete-class" data-id="${c.class_id}" title="Delete">🗑️</button></td>
+              <td style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button type="button" class="btn-sm btn-secondary view-class" data-id="${c.class_id}" title="View students">View</button><button type="button" class="btn-sm btn-secondary enroll-class" data-id="${c.class_id}" title="Enroll students">Enroll</button><button type="button" class="btn-sm btn-secondary edit-class" data-id="${c.class_id}" title="Edit">Edit</button><button type="button" class="btn-sm btn-danger delete-class" data-id="${c.class_id}" title="Delete">Delete</button></td>
             </tr>`).join('')}</tbody>
         </table>
       </div>
@@ -152,9 +152,28 @@ export async function renderClasses(role = 'Admin') {
           <div class="modal-body">
             <label class="login-label">Upload Excel File with Student Names</label>
             <input type="file" id="batchEnrollFile" class="login-input" accept=".xlsx,.xls" style="margin-bottom:1rem;">
-            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">
-              Upload an Excel file with a column named "Name" containing student names. The system will find and enroll matching students.
-            </p>
+            <details style="font-size:0.85rem;color:#666;margin-bottom:1rem;background:#f3f4f6;padding:0.75rem;border-radius:4px;">
+              <summary style="cursor:pointer;font-weight:600;margin-bottom:0.5rem;">📋 Expected Format</summary>
+              <div style="margin-top:0.5rem;">
+                <p style="margin:0.5rem 0;">Create an Excel file with a <strong>"Name"</strong> column containing student <strong>full names</strong> (First Name + Last Name format):</p>
+                <table style="font-size:0.8rem;width:100%;border-collapse:collapse;margin:0.5rem 0;">
+                  <tr style="background:#e5e7eb;">
+                    <th style="border:1px solid #d1d5db;padding:0.5rem;text-align:left;">Name</th>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #d1d5db;padding:0.5rem;">John Doe</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #d1d5db;padding:0.5rem;">Jane Smith</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #d1d5db;padding:0.5rem;">Michael Johnson</td>
+                  </tr>
+                </table>
+                <p style="margin:0.5rem 0;"><strong>Column name variations supported:</strong> "Name", "Student Name", "Full Name", "Names"</p>
+                <p style="margin:0.5rem 0;color:#374151;"><strong>Matching:</strong> Names are matched flexibly – handles special characters, extra spaces, and middle names.</p>
+              </div>
+            </details>
             <p id="batchEnrollError" class="login-error" hidden></p>
             <p id="batchEnrollSuccess" class="login-error" style="background:#dcfce7;color:#166534;border-left-color:#16a34a;" hidden></p>
             <div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:flex-end;">
@@ -399,7 +418,7 @@ export function initClassesPage() {
               <td>${escapeHtml(s.student_id)}</td>
               <td>${escapeHtml(s.year_level||'')}</td>
               <td>${escapeHtml(s.department||'')}</td>
-              <td><button type="button" class="icon-btn danger remove-student" data-student-id="${s.user_id}" data-student-name="${escapeHtml(s.name)}" title="Remove">🗑️</button></td>
+              <td><button type="button" class="btn-sm btn-danger remove-student" data-student-id="${s.user_id}" data-student-name="${escapeHtml(s.name)}" title="Remove">Remove</button></td>
             </tr>`).join('');
         viewStudentsList.innerHTML = `<table class="data-table"><thead><tr><th>Name</th><th>ID</th><th>Year</th><th>Dept</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 
@@ -569,8 +588,17 @@ export function initClassesPage() {
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
+          // Check if XLSX is available
+          if (!window.XLSX) {
+            batchEnrollError.textContent = 'Excel library not loaded. Please refresh the page.';
+            batchEnrollError.hidden = false;
+            return;
+          }
+
           const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = window.XLSX.read(data, { type: 'array' });
+          console.log('Excel sheets:', workbook.SheetNames);
+          
           const sheetName = workbook.SheetNames[0];
           if (!sheetName) {
             batchEnrollError.textContent = 'Excel file is empty';
@@ -579,43 +607,121 @@ export function initClassesPage() {
           }
 
           const sheet = workbook.Sheets[sheetName];
-          const rows = XLSX.utils.sheet_to_json(sheet, { range: 1 });
+          const rows = window.XLSX.utils.sheet_to_json(sheet);
+          console.log('Parsed rows:', rows);
+          console.log('First row columns:', Object.keys(rows[0] || {}));
 
           if (rows.length === 0) {
-            batchEnrollError.textContent = 'No data found in Excel file. Make sure there is a "Name" column.';
+            batchEnrollError.textContent = 'No data found in Excel file. Make sure there is content in the sheet.';
             batchEnrollError.hidden = false;
             return;
           }
 
-          // Get student names from the file
+          // Get student names from the file - check all column names
+          const firstRow = rows[0] || {};
+          const availableColumns = Object.keys(firstRow);
+          console.log('Available columns:', availableColumns);
+          
+          // Find which column likely contains names
+          let nameColumn = null;
+          const nameKeywords = ['name', 'student name', 'full name'];
+          for (const col of availableColumns) {
+            if (nameKeywords.some(kw => col.toLowerCase().includes(kw))) {
+              nameColumn = col;
+              break;
+            }
+          }
+
+          if (!nameColumn && availableColumns.length > 0) {
+            nameColumn = availableColumns[0]; // Use first column if no name column found
+            console.log('No name column found, using first column:', nameColumn);
+          }
+
+          if (!nameColumn) {
+            batchEnrollError.textContent = `No columns found in file. Available columns: ${availableColumns.join(', ')}`;
+            batchEnrollError.hidden = false;
+            return;
+          }
+
           const studentNamesToFind = rows
             .map(row => {
-              // Try different column names
-              return (row['Name'] || row['name'] || row['Student Name'] || row['student_name'] || '').toString().trim();
+              const value = row[nameColumn] || '';
+              return value.toString().trim();
             })
             .filter(name => name.length > 0);
 
+          console.log('Student names to find:', studentNamesToFind);
+
           if (studentNamesToFind.length === 0) {
-            batchEnrollError.textContent = 'No student names found. Make sure there is a column named "Name"';
+            batchEnrollError.textContent = `No student names found in column "${nameColumn}". Make sure the file has names in this column.`;
             batchEnrollError.hidden = false;
             return;
           }
+
+          // Helper function for better name matching
+          const normalizeForMatching = (name) => {
+            return name
+              .toLowerCase()
+              .trim()
+              .replace(/\s+/g, ' ') // normalize whitespace
+              .replace(/[àáäâãå]/g, 'a')
+              .replace(/[èéëê]/g, 'e')
+              .replace(/[ìíïî]/g, 'i')
+              .replace(/[òóöôõø]/g, 'o')
+              .replace(/[ùúüû]/g, 'u')
+              .replace(/[ñ]/g, 'n');
+          };
+
+          const matchesStudent = (nameToFind, student) => {
+            const normalized = normalizeForMatching(nameToFind);
+            const studentNormalized = normalizeForMatching(student.name);
+            
+            // Strategy 1: Exact match
+            if (normalized === studentNormalized) return true;
+            
+            // Strategy 2: One contains the other (substring)
+            if (studentNormalized.includes(normalized) || normalized.includes(studentNormalized)) return true;
+            
+            // Strategy 3: Split by space and match components
+            const nameParts = normalized.split(/\s+/).filter(p => p.length > 0);
+            const studentParts = studentNormalized.split(/\s+/).filter(p => p.length > 0);
+            
+            // If input is "John Doe" and student is "John Michael Doe", it should match
+            if (nameParts.length > 0 && studentParts.length > 0) {
+              // Check if first name matches
+              const firstMatch = nameParts[0] === studentParts[0];
+              // Check if any part of the input matches the last name
+              const lastInputPart = nameParts[nameParts.length - 1];
+              const lastStudentPart = studentParts[studentParts.length - 1];
+              const lastMatch = lastInputPart === lastStudentPart;
+              
+              if (firstMatch && lastMatch) return true;
+              
+              // Also match if multiple parts match
+              const matchingParts = nameParts.filter(part => studentParts.includes(part));
+              if (matchingParts.length === nameParts.length && nameParts.length >= 2) return true;
+            }
+            
+            return false;
+          };
 
           // Match students by name against all available students
           batchEnrollMatches = [];
           const notFound = [];
           
           for (const nameToFind of studentNamesToFind) {
-            const found = enrollAllStudents.find(s => 
-              s.name.toLowerCase().includes(nameToFind.toLowerCase()) || 
-              nameToFind.toLowerCase().includes(s.name.toLowerCase())
-            );
+            const found = enrollAllStudents.find(s => matchesStudent(nameToFind, s));
             if (found && !enrollInitiallyEnrolled.includes(found.user_id)) {
               batchEnrollMatches.push(found);
+              console.log('Matched:', nameToFind, '=>', found.name);
             } else if (!found) {
               notFound.push(nameToFind);
+              console.log('Not found:', nameToFind, '(searching from ' + enrollAllStudents.length + ' students)');
             }
           }
+
+          console.log('Total matched:', batchEnrollMatches.length, 'Not found:', notFound.length);
+          console.log('All available student names:', enrollAllStudents.map(s => s.name));
 
           // Show preview
           renderBatchEnrollPreview(batchEnrollMatches, notFound);

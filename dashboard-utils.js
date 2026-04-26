@@ -49,6 +49,9 @@ export function renderSidebar(role, user, classesList) {
     `).join('');
   return `
     <aside class="sidebar">
+      <div style="padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); text-align: center; margin-bottom: 1rem;">
+        <h2 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff; line-height: 1.3;">Integrated Announcement Management System</h2>
+      </div>
       <div class="user-profile">
         <div class="avatar" style="background-image: url('${profilePicUrl}'); background-size: cover; background-position: center;" aria-hidden="true"></div>
         <span class="user-name">${escapeHtml(user.name)}</span>

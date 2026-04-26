@@ -10,8 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#2563eb">
 </head>
 <body class="login-page">
   <div class="login-layout">
@@ -19,6 +17,7 @@
     </section>
     <section class="login-form-section">
       <div class="login-card">
+        <h1 style="font-size: 1.5rem; font-weight: 600; color: #1a1d21; margin: 0 0 1.5rem 0; text-align: center;">Integrated Announcement Management System</h1>
         <h2 class="login-card-title">Sign in to your account</h2>
         <form id="loginForm" class="login-form">
           <label class="login-label" for="username">Username</label>
@@ -28,38 +27,12 @@
             <input type="password" id="password" name="password" class="login-input" placeholder="Enter your password" autocomplete="current-password" required>
             <button type="button" id="togglePassword" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;">👁️</button>
           </div>
-          <p class="default-password-note">
-            💡 <strong>Default password:</strong> TempPass123!
+          <p style="font-size:0.875rem;color:#6b7280;margin-bottom:1rem;background-color:#f3f4f6;padding:0.75rem;border-radius:0.375rem;border-left:3px solid #3b82f6;">
+            💡 <strong>Default password:</strong> Your Student ID
           </p>
           <p id="loginError" class="login-error" hidden></p>
           <button type="submit" class="login-btn">Login</button>
-          <button type="button" class="forgot-password-link" id="openForgotPassword">Forgot password?</button>
-          <p class="login-dev-link">
-            <a href="#" id="devAdminLink">Dev: Sign in as Admin (no password)</a>
-          </p>
-        </form>
-        <form id="forgotPasswordForm" class="forgot-password-form" hidden>
-          <h3 class="forgot-title">Reset your password</h3>
-          <div id="forgotRequestStep">
-            <label class="login-label" for="fp_username">Username</label>
-            <input type="text" id="fp_username" class="login-input" placeholder="Enter your username" autocomplete="username">
-            <button type="button" class="btn-secondary forgot-action-btn" id="sendForgotOtpBtn">Send OTP to Email</button>
-          </div>
-          <div id="forgotOtpStep" hidden>
-            <label class="login-label" for="fp_otp">OTP Code</label>
-            <input type="text" id="fp_otp" class="login-input" placeholder="Enter 6-digit OTP" inputmode="numeric" maxlength="6">
-            <button type="button" class="btn-secondary forgot-action-btn" id="verifyForgotOtpBtn">Verify OTP</button>
-          </div>
-          <div id="forgotResetStep" hidden>
-            <label class="login-label" for="fp_new_password">New Password</label>
-            <div style="position:relative;">
-              <input type="password" id="fp_new_password" class="login-input" placeholder="At least 6 chars, with letters and numbers" pattern="(?=.*[A-Za-z])(?=.*\d).{6,}" title="Password must have at least 6 characters with at least one letter and one number.">
-              <button type="button" id="toggleForgotPassword" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;">👁️</button>
-            </div>
-            <button type="button" class="login-btn" id="resetPasswordBtn">Change Password</button>
-          </div>
-          <p id="forgotPasswordNotice" class="forgot-notice" hidden></p>
-          <button type="button" class="forgot-password-link" id="backToLoginBtn">Back to login</button>
+          <p style="text-align:center;margin-top:1rem;font-size:0.875rem;color:#6b7280;"><a href="#" id="forgotPasswordLink" style="color:#3b82f6;text-decoration:none;cursor:pointer;">Forgot Password?</a></p>
         </form>
       </div>
     </section>
@@ -71,27 +44,6 @@
         location.href = 'index.html';
         return;
       }
-
-      document.getElementById('devAdminLink').addEventListener('click', async function(e) {
-        e.preventDefault();
-        const errEl = document.getElementById('loginError');
-        errEl.hidden = true;
-        try {
-          const res = await fetch(API_BASE + '/auth/dev-admin');
-          const data = await res.json().catch(function() { return {}; });
-          if (!res.ok) {
-            errEl.textContent = data.error || 'Dev login failed. Is the server running?';
-            errEl.hidden = false;
-            return;
-          }
-          setToken(data.token);
-          setUser(data.user);
-          location.href = 'index.html';
-        } catch (err) {
-          errEl.textContent = 'Network error. Is the server running at ' + API_BASE + '?';
-          errEl.hidden = false;
-        }
-      });
 
       document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -140,169 +92,189 @@
         toggleBtn.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
       });
 
-      document.getElementById('toggleForgotPassword')?.addEventListener('click', (e) => {
+      // Forgot Password
+      document.getElementById('forgotPasswordLink')?.addEventListener('click', async (e) => {
         e.preventDefault();
-        const pwdInput = document.getElementById('fp_new_password');
-        const toggleBtn = document.getElementById('toggleForgotPassword');
-        const type = pwdInput.type === 'password' ? 'text' : 'password';
-        pwdInput.type = type;
-        toggleBtn.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+        showForgotPasswordModal();
       });
+    })();
 
-      const loginForm = document.getElementById('loginForm');
-      const forgotForm = document.getElementById('forgotPasswordForm');
-      const forgotNotice = document.getElementById('forgotPasswordNotice');
-      const forgotRequestStep = document.getElementById('forgotRequestStep');
-      const forgotOtpStep = document.getElementById('forgotOtpStep');
-      const forgotResetStep = document.getElementById('forgotResetStep');
-      let forgotOtpVerified = false;
+    function showForgotPasswordModal() {
+      const modal = document.createElement('div');
+      modal.id = 'forgotPasswordModal';
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+      
+      modal.innerHTML = `
+        <div style="background:white;padding:2rem;border-radius:10px;width:100%;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+          <h2 style="margin:0 0 1rem 0;font-size:1.25rem;color:#1a1d21;">Reset Your Password</h2>
+          <p style="color:#6b7280;margin-bottom:1.5rem;font-size:0.875rem;">Enter your username to receive a verification code.</p>
+          
+          <div id="forgotStep1">
+            <input type="text" id="forgotUsername" class="login-input" placeholder="Your username/email/student ID" style="margin-bottom:1rem;width:100%;" required>
+            <p id="forgotError1" class="login-error" hidden style="margin-bottom:1rem;"></p>
+            <button id="forgotSendOtpBtn" type="button" class="login-btn" style="width:100%;margin-bottom:0.5rem;">Send Code</button>
+            <button id="forgotCancelBtn" type="button" class="login-btn" style="width:100%;background:#e5e7eb;color:#374151;">Cancel</button>
+          </div>
 
-      function showForgotNotice(message, isError) {
-        forgotNotice.textContent = message;
-        forgotNotice.classList.toggle('error', !!isError);
-        forgotNotice.hidden = false;
-      }
+          <div id="forgotStep2" style="display:none;">
+            <p style="font-size:0.875rem;color:#6b7280;margin-bottom:1rem;">Code sent to your registered email. Valid for 2 minutes.</p>
+            <input type="text" id="forgotOtpInput" class="login-input" placeholder="Enter 6-digit code" maxlength="6" style="margin-bottom:1rem;width:100%;" required>
+            <input type="password" id="forgotNewPassword" class="login-input" placeholder="New password" style="margin-bottom:1rem;width:100%;" required>
+            <input type="password" id="forgotConfirmPassword" class="login-input" placeholder="Confirm password" style="margin-bottom:1rem;width:100%;" required>
+            <p id="forgotError2" class="login-error" hidden style="margin-bottom:1rem;"></p>
+            <button id="forgotResetBtn" type="button" class="login-btn" style="width:100%;margin-bottom:0.5rem;">Reset Password</button>
+            <button id="forgotBackBtn" type="button" class="login-btn" style="width:100%;background:#e5e7eb;color:#374151;">Back</button>
+          </div>
+        </div>
+      `;
 
-      function toggleForgotMode(showForgot) {
-        loginForm.hidden = showForgot;
-        forgotForm.hidden = !showForgot;
-        forgotNotice.hidden = true;
-        if (!showForgot) {
-          forgotOtpVerified = false;
-          forgotRequestStep.hidden = false;
-          forgotOtpStep.hidden = true;
-          forgotResetStep.hidden = true;
-          document.getElementById('fp_otp').value = '';
-          document.getElementById('fp_new_password').value = '';
-        } else {
-          forgotOtpVerified = false;
-          forgotRequestStep.hidden = false;
-          forgotOtpStep.hidden = true;
-          forgotResetStep.hidden = true;
-        }
-      }
+      document.body.appendChild(modal);
 
-      document.getElementById('openForgotPassword')?.addEventListener('click', () => {
-        document.getElementById('fp_username').value = document.getElementById('username').value.trim();
-        toggleForgotMode(true);
-      });
+      const sendOtpBtn = document.getElementById('forgotSendOtpBtn');
+      const cancelBtn = document.getElementById('forgotCancelBtn');
+      const resetBtn = document.getElementById('forgotResetBtn');
+      const backBtn = document.getElementById('forgotBackBtn');
+      const usernameInput = document.getElementById('forgotUsername');
+      const otpInput = document.getElementById('forgotOtpInput');
+      const newPwdInput = document.getElementById('forgotNewPassword');
+      const confirmPwdInput = document.getElementById('forgotConfirmPassword');
+      const errEl1 = document.getElementById('forgotError1');
+      const errEl2 = document.getElementById('forgotError2');
+      const step1 = document.getElementById('forgotStep1');
+      const step2 = document.getElementById('forgotStep2');
 
-      document.getElementById('backToLoginBtn')?.addEventListener('click', () => {
-        toggleForgotMode(false);
-      });
+      let otpTimer = null;
 
-      document.getElementById('sendForgotOtpBtn')?.addEventListener('click', async () => {
-        const username = document.getElementById('fp_username').value.trim();
+      sendOtpBtn.addEventListener('click', async () => {
+        const username = usernameInput.value.trim();
+        errEl1.hidden = true;
+
         if (!username) {
-          showForgotNotice('Enter your username first.', true);
+          errEl1.textContent = 'Please enter username or student ID.';
+          errEl1.hidden = false;
           return;
         }
 
-        forgotNotice.hidden = true;
-        forgotOtpVerified = false;
-        forgotOtpStep.hidden = true;
-        forgotResetStep.hidden = true;
+        sendOtpBtn.disabled = true;
+        sendOtpBtn.textContent = 'Sending...';
 
         try {
-          const res = await fetch(API_BASE + '/auth/forgot-password/send-otp', {
+          const res = await fetch('/api/auth/forgot-password', {
             method: 'POST',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username })
           });
-          const data = await res.json().catch(() => ({}));
+          const data = await res.json();
+
+          sendOtpBtn.disabled = false;
+          sendOtpBtn.textContent = 'Send Code';
+
           if (!res.ok) {
-            showForgotNotice(data.error || 'Failed to send OTP.', true);
+            errEl1.textContent = data.error || 'Failed to send code.';
+            errEl1.hidden = false;
             return;
           }
-          forgotRequestStep.hidden = false;
-          forgotOtpStep.hidden = false;
-          showForgotNotice(`OTP sent to ${data.email || 'your registered email'}.`, false);
-        } catch (_) {
-          showForgotNotice('Network error. Please try again.', true);
+
+          // Show step 2
+          step1.style.display = 'none';
+          step2.style.display = 'block';
+
+          // Start OTP timer
+          let timeLeft = 120;
+          const timerEl = document.createElement('p');
+          timerEl.id = 'forgotOtpTimer';
+          timerEl.style.cssText = 'font-size:0.875rem;color:#666;text-align:center;margin:-0.5rem 0 1rem 0;';
+          step2.insertBefore(timerEl, otpInput);
+
+          if (otpTimer) clearInterval(otpTimer);
+          otpTimer = setInterval(() => {
+            timeLeft--;
+            timerEl.textContent = `Valid for ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+            if (timeLeft <= 0) {
+              clearInterval(otpTimer);
+              timerEl.textContent = 'Code expired. Request a new one.';
+              resetBtn.disabled = true;
+            }
+          }, 1000);
+        } catch (err) {
+          sendOtpBtn.disabled = false;
+          sendOtpBtn.textContent = 'Send Code';
+          errEl1.textContent = 'Network error. Is the server running?';
+          errEl1.hidden = false;
         }
       });
 
-      document.getElementById('verifyForgotOtpBtn')?.addEventListener('click', async () => {
-        const username = document.getElementById('fp_username').value.trim();
-        const otpCode = document.getElementById('fp_otp').value.trim();
-        if (!username || !otpCode) {
-          showForgotNotice('Enter username and OTP code.', true);
+      resetBtn.addEventListener('click', async () => {
+        const otp = otpInput.value.trim();
+        const newPwd = newPwdInput.value;
+        const confirmPwd = confirmPwdInput.value;
+
+        errEl2.hidden = true;
+
+        if (!otp || !newPwd || !confirmPwd) {
+          errEl2.textContent = 'Please fill in all fields.';
+          errEl2.hidden = false;
           return;
         }
 
-        forgotNotice.hidden = true;
+        if (newPwd !== confirmPwd) {
+          errEl2.textContent = 'Passwords do not match.';
+          errEl2.hidden = false;
+          return;
+        }
+
+        if (newPwd.length < 8) {
+          errEl2.textContent = 'Password must be at least 8 characters.';
+          errEl2.hidden = false;
+          return;
+        }
+
+        resetBtn.disabled = true;
+        resetBtn.textContent = 'Resetting...';
+
         try {
-          const res = await fetch(API_BASE + '/auth/forgot-password/verify-otp', {
+          const res = await fetch('/api/auth/verify-forgot-password', {
             method: 'POST',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, otp_code: otpCode })
+            body: JSON.stringify({ username: usernameInput.value.trim(), otp, newPassword: newPwd })
           });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            showForgotNotice(data.error || 'OTP verification failed.', true);
-            return;
-          }
-          forgotOtpVerified = true;
-          forgotRequestStep.hidden = true;
-          forgotOtpStep.hidden = true;
-          forgotResetStep.hidden = false;
-          showForgotNotice('OTP verified. You can now set your new password.', false);
-        } catch (_) {
-          showForgotNotice('Network error. Please try again.', true);
-        }
-      });
+          const data = await res.json();
 
-      document.getElementById('resetPasswordBtn')?.addEventListener('click', async () => {
-        const username = document.getElementById('fp_username').value.trim();
-        const newPassword = document.getElementById('fp_new_password').value;
-        if (!username) {
-          showForgotNotice('Enter your username.', true);
-          return;
-        }
-        if (!forgotOtpVerified) {
-          showForgotNotice('Verify OTP before changing your password.', true);
-          return;
-        }
-        if (!newPassword || newPassword.length < 6) {
-          showForgotNotice('Password must be at least 6 characters long.', true);
-          return;
-        }
-        if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
-          showForgotNotice('Password must include at least one letter and one number.', true);
-          return;
-        }
+          resetBtn.disabled = false;
+          resetBtn.textContent = 'Reset Password';
 
-        forgotNotice.hidden = true;
-        try {
-          const res = await fetch(API_BASE + '/auth/forgot-password/reset', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, new_password: newPassword })
-          });
-          const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            showForgotNotice(data.error || 'Password reset failed.', true);
+            errEl2.textContent = data.error || 'Failed to reset password.';
+            errEl2.hidden = false;
             return;
           }
 
-          showForgotNotice('Password changed successfully. Please sign in.', false);
-          document.getElementById('password').value = '';
-          toggleForgotMode(false);
-        } catch (_) {
-          showForgotNotice('Network error. Please try again.', true);
+          alert('Password reset successfully! You can now log in.');
+          modal.remove();
+          if (otpTimer) clearInterval(otpTimer);
+        } catch (err) {
+          resetBtn.disabled = false;
+          resetBtn.textContent = 'Reset Password';
+          errEl2.textContent = 'Network error. Is the server running?';
+          errEl2.hidden = false;
         }
       });
-    })();
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-          console.log('SW registered:', reg.scope);
-        }).catch(err => console.log('SW registration failed:', err));
+
+      cancelBtn.addEventListener('click', () => {
+        modal.remove();
+        if (otpTimer) clearInterval(otpTimer);
+      });
+
+      backBtn.addEventListener('click', () => {
+        step2.style.display = 'none';
+        step1.style.display = 'block';
+        otpInput.value = '';
+        newPwdInput.value = '';
+        confirmPwdInput.value = '';
+        errEl2.hidden = true;
+        if (otpTimer) clearInterval(otpTimer);
+        const timerEl = document.getElementById('forgotOtpTimer');
+        if (timerEl) timerEl.remove();
       });
     }
   </script>

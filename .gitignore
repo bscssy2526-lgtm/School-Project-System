@@ -10,11 +10,14 @@ server/node_modules/
 # 📁 Uploads (your cake images if users upload)
 uploads/
 ui/
+backups/
+database/
 
 
 # 🧾 Logs & temp files
 *.log
 *.tmp
+*.md
 
 # 💻 OS junk
 .DS_Store

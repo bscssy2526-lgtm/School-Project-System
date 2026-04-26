@@ -68,13 +68,13 @@ export async function renderUsers() {
               const isAdmin = u.role === 'Admin';
               const editBtn = isAdmin 
                 ? ''
-                : `<button type="button" class="icon-btn edit-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Edit">✏️</button>`;
+                : `<button type="button" class="btn-sm btn-secondary edit-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Edit">Edit</button>`;
               const editPassBtn = isAdmin
                 ? ''
-                : `<button type="button" class="icon-btn edit-password" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Change password">🔑</button>`;
+                : `<button type="button" class="btn-sm btn-secondary edit-password" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Change password">Password</button>`;
               const deleteBtn = isAdmin
-                ? `<button type="button" class="icon-btn" disabled title="Admin accounts cannot be deleted" style="opacity: 0.5; cursor: not-allowed;">🗑️</button>`
-                : `<button type="button" class="icon-btn delete-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Delete">🗑️</button>`;
+                ? `<button type="button" class="btn-sm" disabled title="Admin accounts cannot be deleted" style="opacity: 0.5; cursor: not-allowed;">Delete</button>`
+                : `<button type="button" class="btn-sm btn-danger delete-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Delete">Delete</button>`;
               return `<tr ${isAdmin ? 'style="background-color: #f0f0f0;"' : ''}>
               <td>${escapeHtml(u.name)}</td>
               <td>${escapeHtml(displayId(u))}</td>
@@ -160,7 +160,7 @@ export async function renderUsers() {
                 </div>
                 <div id="nu_email_wrap" style="display:none;">
                   <label class="login-label">Email Address</label>
-                  <input type="email" id="nu_email" class="login-input" required>
+                  <input type="email" id="nu_email" name="email" class="login-input">
                 </div>
               </div>
               <p id="newUserError" class="login-error" hidden></p>
@@ -466,13 +466,13 @@ export async function initUsersPage() {
       const isAdmin = u.role === 'Admin';
       const editBtn = isAdmin 
         ? ''
-        : `<button type="button" class="icon-btn edit-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Edit">✏️</button>`;
+        : `<button type="button" class="btn-sm btn-secondary edit-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Edit">Edit</button>`;
       const editPassBtn = isAdmin
         ? ''
-        : `<button type="button" class="icon-btn edit-password" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Change password">🔑</button>`;
+        : `<button type="button" class="btn-sm btn-secondary edit-password" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Change password">Password</button>`;
       const deleteBtn = isAdmin
-        ? `<button type="button" class="icon-btn" disabled title="Admin accounts cannot be deleted" style="opacity: 0.5; cursor: not-allowed;">🗑️</button>`
-        : `<button type="button" class="icon-btn delete-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Delete">🗑️</button>`;
+        ? `<button type="button" class="btn-sm" disabled title="Admin accounts cannot be deleted" style="opacity: 0.5; cursor: not-allowed;">Delete</button>`
+        : `<button type="button" class="btn-sm btn-danger delete-user" data-id="${u.user_id}" data-name="${escapeHtml(u.name)}" title="Delete">Delete</button>`;
       return `<tr ${isAdmin ? 'style="background-color: #f0f0f0;"' : ''}>
               <td>${escapeHtml(u.name)}</td>
               <td>${escapeHtml(displayId(u))}</td>
@@ -495,15 +495,26 @@ export async function initUsersPage() {
           return;
         }
         openEditModal(userId);
-        document.getElementById('eu_f_name').value = user.f_name;
+        document.getElementById('eu_f_name').value = user.f_name || '';
         document.getElementById('eu_m_name').value = user.m_name || '';
-        document.getElementById('eu_l_name').value = user.l_name;
+        document.getElementById('eu_l_name').value = user.l_name || '';
         document.getElementById('eu_role').value = user.role;
         document.getElementById('eu_username').value = user.username || '';
         document.getElementById('eu_student_id').value = user.student_id || '';
         document.getElementById('eu_department').value = user.department || '';
         document.getElementById('eu_year_level').value = user.year_level || '';
-        document.getElementById('eu_birthday').value = user.birthday || '';
+        
+        // Format birthday for date input (YYYY-MM-DD)
+        if (user.birthday) {
+          const bday = user.birthday.trim();
+          if (bday) {
+            // If already in YYYY-MM-DD format, use as-is
+            document.getElementById('eu_birthday').value = bday;
+          }
+        } else {
+          document.getElementById('eu_birthday').value = '';
+        }
+        
         const isStudent = user.role === 'Student';
         const isInstructor = user.role === 'Instructor';
         document.getElementById('eu_username_wrap').style.display = isStudent ? 'none' : '';
