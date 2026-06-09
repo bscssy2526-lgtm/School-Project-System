@@ -5,9 +5,9 @@
 
 const { decryptPhoneNumber } = require('./utils/encryption');
 
-// TextBee API configuration
-const TEXTBEE_DEVICE_ID = '69a0dbf01a154aafc2de6984';
-const TEXTBEE_API_KEY = 'a03df44d-26ad-4f2c-9f57-beaa04b3dd27';
+// TextBee API configuration - from environment variables
+const TEXTBEE_DEVICE_ID = process.env.TEXTBEE_DEVICE_ID || '';
+const TEXTBEE_API_KEY = process.env.TEXTBEE_API_KEY || '';
 const TEXTBEE_GATEWAY_URL = 'https://api.textbee.dev/api/v1/gateway/devices/' + TEXTBEE_DEVICE_ID + '/send-sms';
 
 function normalizePhone(num) {
